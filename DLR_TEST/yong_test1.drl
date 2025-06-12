@@ -1,0 +1,86 @@
+## Title : m0609_assemble_gear_2
+## Time : 2025-06-12 10:09:56
+Global_R1 = posx(402.65,90.74,129,23.35,-179.65,24.26)
+Global_R2 = posx(394.82,194.53,129,35.72,-179.15,36.35)
+Global_R3 = posx(488.44,146.34,129,34.68,-179.01,35.42)
+Global_R4 = posx(427.71,140.46,129,26.63,-178.38,26.89)
+Global_L1 = posx(297.90,-112.82,129,12.70,-178.57,13.26)
+Global_L2 = posx(346.43,-19.52,129,17.52,-178.17,17.87)
+Global_L3 = posx(402.17,-108.32,129,16.96,-178.15,17.56)
+Global_L4 = posx(350.02,-82.95,129,22.06,-178.35,22.58)
+
+
+def grasp():
+    set_digital_output(1,ON)
+    # SetNode
+    set_digital_output(2,OFF)
+    # WaitNode
+    wait(0.50)
+    
+_alias_sub_name_grasp = grasp
+
+def release():
+    # SetNode
+    set_digital_output(2,ON)
+    # SetNode
+    set_digital_output(1,OFF)
+    
+_alias_sub_name_release = release
+
+def detecting():
+
+    set_ref_coord(1)
+    # ComplianceNode
+    task_compliance_ctrl()
+    set_stiffnessx([3000.00, 3000.00, 3000.00, 200.00, 200.00, 200.00],time=0.0)
+    # ForceNode
+    set_desired_force([0.00, 0.00, 10.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0,mod=DR_FC_MOD_ABS)
+    # RepeatNode
+    while True:
+        if check_position_condition(axis=DR_AXIS_Z, min=38, ref=DR_BASE):
+            break
+        elif check_force_condition(axis=DR_AXIS_Z, min=10, ref=None):
+            move_periodic(amp=[0.00, 0.00, 0.00, 0.00, 0.00, 10.00], period=[0.00, 0.00, 0.00, 0.00, 0.00, 3.00], atime=1.50, repeat=3, ref=0)
+            break
+            
+    # ForceNode
+    release_force(time=0.0)
+    # ComplianceNode
+    release_compliance_ctrl()
+    
+_alias_sub_name_detecting = detecting
+
+def grap_realease(position,motion):
+    movel(trans(position, alpha, DR_BASE, DR_BASE))
+    motion()
+    movel(trans(position, delta, DR_BASE, DR_BASE))
+
+
+gLoop100956235 = 0
+alpha = [0,0,-90,0,0,0]
+delta = [0,0,90,0,0,0]
+last_dance = [0,0,-70,0,0,0]
+
+while gLoop100956235 < 1:
+    movej(Global_L1)
+    movel(trans(Global_L1, alpha, DR_BASE, DR_BASE))
+    _alias_sub_name_grasp()
+    movel(trans(Global_L1, delta, DR_BASE, DR_BASE))
+    movej(Global_R1)
+    grap_realease(Global_R1, _alias_sub_name_release)
+    movej(Global_L2)
+    grap_realease(Global_L2, _alias_sub_name_grasp)
+    movej(Global_R2)
+    grap_realease(Global_R2,  _alias_sub_name_release)
+    movej(Global_L3)
+    grap_realease(Global_L3, _alias_sub_name_grasp)
+    movej(Global_R3)
+    grap_realease(Global_R3,  _alias_sub_name_release)
+    movej(Global_L4)
+    grap_realease(Global_L4, _alias_sub_name_grasp)
+    movej(Global_R4)
+    movel(trans(Global_R4, last_dance, DR_BASE, DR_BASE))
+    _alias_sub_name_detecting()
+    _alias_sub_name_release()
+    movej(Global_L1)
+    gLoop100956235 = 1
