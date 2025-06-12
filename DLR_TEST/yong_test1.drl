@@ -28,6 +28,8 @@ set_digital_output(2,ON)
 # --- 메인 루프 (이동 코드 추가) ---
 k = True
 while k:
+    if System_count_num >=9:
+        break
     # 1. 팔레트 위치 계산
     # (변수명은 지난번에 얘기한 대로 바꿔서 적용했어!)
     Pallet_Pose1 = get_pattern_point(pos_1_LEFT_UP, pos_1_RIGHT_UP, pos_1_LEFT_DOWN, pos_1_RIGHT_DOWN, System_count_num, direction, row, column, stack, thickness, point_offset)
@@ -59,14 +61,14 @@ while k:
     
 
     System_count_num +=1
-    if System_count_num >9:
-        k = False
+
     # --- 여기서 그리퍼(Gripper) 작동 등 실제 작업을 수행하면 돼! ---
     
     #movel(Approach_Pose, vel=150, acc=300) 
-
 k = True
 while k:
+    if System_cnt >=9:
+        break
     # 1. 팔레트 위치 계산
     # (변수명은 지난번에 얘기한 대로 바꿔서 적용했어!)
     Pallet_Pose1 = get_pattern_point(pos_1_LEFT_UP, pos_1_RIGHT_UP, pos_1_LEFT_DOWN, pos_1_RIGHT_DOWN, System_cnt, direction, row, column, stack, thickness, point_offset)
@@ -97,5 +99,3 @@ while k:
     movel(Approach_Pose1, vel=150, acc=300)
 
     System_cnt +=1
-    if System_cnt >9:
-        k = False
