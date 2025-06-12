@@ -59,7 +59,7 @@ while k:
     
 
     System_count_num +=1
-    if System_count_num >10:
+    if System_count_num >9:
         k = False
     # --- 여기서 그리퍼(Gripper) 작동 등 실제 작업을 수행하면 돼! ---
     
@@ -97,5 +97,5 @@ while k:
     movel(Approach_Pose1, vel=150, acc=300)
 
     System_cnt +=1
-    if System_cnt >10:
+    if System_cnt >9:
         k = False
