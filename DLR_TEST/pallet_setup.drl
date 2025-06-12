@@ -22,21 +22,36 @@ total_count = row * column * stack
 
 
 # --- 메인 루프 (이동 코드 추가) ---
-for pallet_index in range(0, total_count):
+for pallet_index in range(0, total_coun,-1t):
     # 1. 팔레트 위치 계산
     # (변수명은 지난번에 얘기한 대로 바꿔서 적용했어!)
-    Pallet_Pose = get_pattern_point(pos_1_LEFT_UP, pos_1_RIGHT_UP, pos_1_LEFT_DOWN, pos_1_RIGHT_DOWN, pallet_index, direction, row, column, stack, thickness, point_offset)
-    
+    Pallet_Pose1 = get_pattern_point(pos_1_LEFT_UP, pos_1_RIGHT_UP, pos_1_LEFT_DOWN, pos_1_RIGHT_DOWN, pallet_index, direction, row, column, stack, thickness, point_offset)
+    Pallet_Pose2 = get_pattern_point(pos_2_LEFT_UP, pos_2_RIGHT_UP, pos_2_LEFT_DOWN, pos_2_RIGHT_DOWN, pallet_index, direction, row, column, stack, thickness, point_offset)   
+  
     # 2. 접근 위치 계산 (Pallet_Pose의 200mm 위)
-    Approach_Pose = trans(Pallet_Pose, pos_APPROACH_OFFSET, ref=DR_BASE)
-
-    tp_popup("인덱스 {}번 위치로 이동합니다.".format(pallet_index))
+    Approach_Pose1 = trans(Pallet_Pose1, pos_APPROACH_OFFSET, ref=DR_BASE)
+    Approach_Pose2 = trans(Pallet_Pose2, pos_APPROACH_OFFSET, ref=DR_BASE)
+    
+    # tp_popup("인덱스 {}번 위치로 이동합니다.".format(pallet_index))
 
     # 3. 로봇 이동
-    movel(Approach_Pose, vel=150, acc=300)      # a. 접근 위치로 이동
-    movel(Pallet_Pose, vel=100, acc=200)         # b. 최종 목적지로 이동
+    movel(Approach_Pose1, vel=150, acc=300)
+          # a. 접근 위치로 이동
+    movel(Pallet_Pose1, vel=100, acc=200)
+    set_digital_output(2,OFF)
+    set_digital_output(1,ON)
+    wait(0.5)
+    movel(Approach_Pose1, vel=150, acc=300)
+             # b. 최종 목적지로 이동
+
+    movel(Approach_Pose2, vel=150, acc=300)
+          # a. 접근 위치로 이동
+    movel(Pallet_Pose2, vel=100, acc=200)
+    set_digital_output(1,OFF)
+    set_digital_output(2,ON)
+    wait(0.5)
+    movel(Approach_Pose2, vel=150, acc=300)
     
     # --- 여기서 그리퍼(Gripper) 작동 등 실제 작업을 수행하면 돼! ---
-    wait(1)  # 그리퍼가 동작할 시간을 주는 예시
     
-    movel(Approach_Pose, vel=150, acc=300) 
+    #movel(Approach_Pose, vel=150, acc=300) 
