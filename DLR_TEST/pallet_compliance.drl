@@ -72,6 +72,7 @@ for pallet_index in range(0, total_count):
     movel(Approach_Pose2, vel=150, acc=300)
     movel(Pallet_Pose2, vel=100, acc=200)
 
+    compl()
     release()
     wait(0.5)
     movel(Approach_Pose2, vel=150, acc=300)    
