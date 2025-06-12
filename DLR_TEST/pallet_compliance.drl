@@ -26,14 +26,13 @@ def release():
 
 # COMPLIANCE
 def compl():
-
     set_ref_coord(1)
     task_compliance_ctrl()
     set_stiffnessx([3000.00, 3000.00, 3000.00, 200.00, 200.00, 200.00],time=0.0)
-    set_desired_force([0.00, 0.00, 10.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0,mod=DR_FC_MOD_ABS)
+    set_desired_force([0.00, 0.00, 20.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0,mod=DR_FC_MOD_ABS)
 
     while True:
-        if check_force_condition(axis=DR_AXIS_Z, min=10, ref=None):
+        if check_force_condition(axis=DR_AXIS_Z, min=20, ref=None):
             break
             
     release_force(time=0.0)
