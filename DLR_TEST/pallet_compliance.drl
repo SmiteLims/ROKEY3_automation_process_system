@@ -1,0 +1,85 @@
+pos_1_LEFT_UP = posx(251.93, 148.84, 28.84, 92.5, -179.93, 93)
+pos_1_LEFT_DOWN = posx(251.64, 46.85, 28.4, 172.16, 180, 172.7)
+pos_1_RIGHT_UP = posx(353.59, 148.56, 28.94, 179.32, 180, -179.97)
+pos_1_RIGHT_DOWN = posx(353.93, 46.13, 27.97, 16.7, 179.99, 17.71)
+
+pos_2_LEFT_UP = posx(250.45, -51.81, 27.64, 164.94, 179.96, 166.37)
+pos_2_LEFT_DOWN = posx(248.86, -154.53, 27.89, 50.91, -179.94, 52.7)
+pos_2_RIGHT_UP = posx(353.88, -53.35, 28.69, 16.67, 180, 18.58)
+pos_2_RIGHT_DOWN = posx(351.07, -155.2, 40.8, 153.98, 180, 155.97)
+
+# Z축으로 200mm 위에서 접근/후퇴하기 위한 상대 좌표
+pos_APPROACH_OFFSET = posx(0, 0, 200, 0, 0, 0)
+
+def grasp():
+    set_digital_output(1,ON)
+    set_digital_output(2,OFF)
+
+
+def release():
+    set_digital_output(2,ON)
+    set_digital_output(1,OFF)
+
+
+direction = 0
+row = 3
+column = 3
+stack = 1
+thickness = 0
+point_offset = [0,0,0]
+
+total_count = row * column * stack
+
+set_digital_output(1,OFF)
+set_digital_output(2,ON)
+
+# --- 1 to 2  ---
+for pallet_index in range(0, total_count):
+
+    # PALLET POSITION SETTINGS
+    Pallet_Pose1 = get_pattern_point(pos_1_LEFT_UP, pos_1_RIGHT_UP, pos_1_LEFT_DOWN, pos_1_RIGHT_DOWN, pallet_index, direction, row, column, stack, thickness, point_offset)
+    Pallet_Pose2 = get_pattern_point(pos_2_LEFT_UP, pos_2_RIGHT_UP, pos_2_LEFT_DOWN, pos_2_RIGHT_DOWN, pallet_index, direction, row, column, stack, thickness, point_offset)   
+    Approach_Pose1 = trans(Pallet_Pose1, pos_APPROACH_OFFSET, ref=DR_BASE)
+    Approach_Pose2 = trans(Pallet_Pose2, pos_APPROACH_OFFSET, ref=DR_BASE)
+
+    # MOVE
+    movel(Approach_Pose1, vel=150, acc=300)
+    movel(Pallet_Pose1, vel=100, acc=200)
+
+    grasp()
+    wait(0.5)
+
+    movel(Approach_Pose1, vel=150, acc=300)
+    movel(Approach_Pose2, vel=150, acc=300)
+    movel(Pallet_Pose2, vel=100, acc=200)
+
+    release()
+    wait(0.5)
+    movel(Approach_Pose2, vel=150, acc=300)    
+    #movel(Approach_Pose, vel=150, acc=300) 
+
+
+# --- 2 to 1  ---    
+for pallet_index in range(0, total_count):
+
+    # PALLET POSITION SETTINGS
+    Pallet_Pose1 = get_pattern_point(pos_1_LEFT_UP, pos_1_RIGHT_UP, pos_1_LEFT_DOWN, pos_1_RIGHT_DOWN, pallet_index, direction, row, column, stack, thickness, point_offset)
+    Pallet_Pose2 = get_pattern_point(pos_2_LEFT_UP, pos_2_RIGHT_UP, pos_2_LEFT_DOWN, pos_2_RIGHT_DOWN, pallet_index, direction, row, column, stack, thickness, point_offset)   
+    Approach_Pose2 = trans(Pallet_Pose2, pos_APPROACH_OFFSET, ref=DR_BASE)
+    Approach_Pose1 = trans(Pallet_Pose1, pos_APPROACH_OFFSET, ref=DR_BASE)
+    
+    # MOVE
+    movel(Approach_Pose2, vel=150, acc=300)
+    movel(Pallet_Pose2, vel=100, acc=200)
+
+    grasp()
+    wait(0.5)
+
+    movel(Approach_Pose2, vel=150, acc=300)
+    movel(Approach_Pose1, vel=150, acc=300)
+
+    movel(Pallet_Pose1, vel=100, acc=200)
+
+    release()
+    wait(0.5)
+    movel(Approach_Pose1, vel=150, acc=300)
