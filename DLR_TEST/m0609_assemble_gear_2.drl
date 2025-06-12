@@ -1,0 +1,178 @@
+## Title : m0609_assemble_gear_2
+## Time : 2025-06-12 15:28:45
+Global_R1 = posx(402.65,90.74,130.59,23.35,-179.65,24.26)
+Global_R2 = posx(394.82,194.53,127.14,35.72,-179.15,36.35)
+Global_R3 = posx(488.44,146.34,127.35,34.68,-179.01,35.42)
+Global_R4 = posx(427.71,140.46,128.09,26.63,-178.38,26.89)
+Global_L1 = posx(297.90,-112.82,128.70,12.70,-178.57,13.26)
+Global_L2 = posx(346.43,-19.52,127.36,17.52,-178.17,17.87)
+Global_L3 = posx(402.17,-108.32,127.23,16.96,-178.15,17.56)
+Global_L4 = posx(350.02,-82.95,129.67,22.06,-178.35,22.58)
+
+def grasp():
+    global System_cnt
+    global System_home
+    global System_home_down
+    global System_count_num
+    global System_new_home
+    global Global_R1
+    global Global_R2
+    global Global_R3
+    global Global_R4
+    global Global_L1
+    global Global_L2
+    global Global_L3
+    global Global_L4
+    # SetNode
+    set_digital_output(1,ON)
+    # SetNode
+    set_digital_output(2,OFF)
+    # WaitNode
+    wait(0.50)
+    
+_alias_sub_name_grasp = grasp
+
+def release():
+    global System_cnt
+    global System_home
+    global System_home_down
+    global System_count_num
+    global System_new_home
+    global Global_R1
+    global Global_R2
+    global Global_R3
+    global Global_R4
+    global Global_L1
+    global Global_L2
+    global Global_L3
+    global Global_L4
+    # SetNode
+    set_digital_output(2,ON)
+    # SetNode
+    set_digital_output(1,OFF)
+    
+_alias_sub_name_release = release
+
+def detecting():
+    global System_cnt
+    global System_home
+    global System_home_down
+    global System_count_num
+    global System_new_home
+    global Global_R1
+    global Global_R2
+    global Global_R3
+    global Global_R4
+    global Global_L1
+    global Global_L2
+    global Global_L3
+    global Global_L4
+    # SetNode
+    set_ref_coord(1)
+    # ComplianceNode
+    task_compliance_ctrl()
+    set_stiffnessx([3000.00, 3000.00, 3000.00, 200.00, 200.00, 200.00],time=0.0)
+    # ForceNode
+    set_desired_force([0.00, 0.00, 10.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0,mod=DR_FC_MOD_ABS)
+    # RepeatNode
+    while True:
+        if check_force_condition(axis=DR_AXIS_Z, min=10, ref=None):
+            move_periodic(amp=[0.00, 0.00, 0.00, 0.00, 0.00, 10.00], period=[0.00, 0.00, 0.00, 0.00, 0.00, 3.00], atime=1.50, repeat=3, ref=0)
+            break
+            
+        
+    # ForceNode
+    release_force(time=0.0)
+    # ComplianceNode
+    release_compliance_ctrl()
+    
+_alias_sub_name_detecting = detecting
+
+set_singular_handling(DR_AVOID)
+set_velj(60.0)
+set_accj(100.0)
+set_velx(250.0, 80.625, DR_OFF)
+set_accx(1000.0, 322.5)
+gLoop152845184 = 0
+while gLoop152845184 < 1:
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_L1, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -90.00, 0.00, 0.00, 0.00), radius=40.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_grasp()
+    # MoveLNode
+    movel(Global_L1, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(Global_R1, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -70.00, 0.00, 0.00, 0.00), radius=20.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_detecting()
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_R1, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_L2, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -90.00, 0.00, 0.00, 0.00), radius=40.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_grasp()
+    # MoveLNode
+    movel(Global_L2, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(Global_R2, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -70.00, 0.00, 0.00, 0.00), radius=40.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_detecting()
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_R2, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_L3, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -90.00, 0.00, 0.00, 0.00), radius=40.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_grasp()
+    # MoveLNode
+    movel(Global_L3, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(Global_R3, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -70.00, 0.00, 0.00, 0.00), radius=40.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_detecting()
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_R3, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_L4, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -90.00, 0.00, 0.00, 0.00), radius=40.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_grasp()
+    # MoveLNode
+    movel(Global_L4, radius=40.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(Global_R4, radius=10.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # MoveLNode
+    movel(posx(0.00, 0.00, -70.00, 0.00, 0.00, 0.00), radius=0.00, ref=0, mod=DR_MV_MOD_REL, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    # CallNode
+    _alias_sub_name_detecting()
+    # CallNode
+    _alias_sub_name_release()
+    # MoveLNode
+    movel(Global_R4, radius=0.00, ref=0, mod=DR_MV_MOD_ABS, ra=DR_MV_RA_DUPLICATE, app_type=DR_MV_APP_NONE)
+    gLoop152845184 = gLoop152845184 + 1
