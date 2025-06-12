@@ -9,7 +9,7 @@ pos_2_RIGHT_UP = posx(353.88, -53.35, 28.69, 16.67, 180, 18.58)
 pos_2_RIGHT_DOWN = posx(351.07, -155.2, 40.8, 153.98, 180, 155.97)
 
 # Z축으로 200mm 위에서 접근/후퇴하기 위한 상대 좌표
-pos_APPROACH_OFFSET = posx(0, 0, 200, 0, 0, 0)
+pos_APPROACH_OFFSET = posx(0, 0, 150, 0, 0, 0)
 
 # GRIPPER REACH POINT SETTING
 pos_gripper_reach_point = posx(0, 0, -20, 0, 0, 0)
@@ -26,13 +26,14 @@ def release():
 
 # COMPLIANCE
 def compl():
+
     set_ref_coord(1)
     task_compliance_ctrl()
     set_stiffnessx([3000.00, 3000.00, 3000.00, 200.00, 200.00, 200.00],time=0.0)
-    set_desired_force([0.00, 0.00, 20.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0,mod=DR_FC_MOD_ABS)
+    set_desired_force([0.00, 0.00, 30.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0,mod=DR_FC_MOD_ABS)
 
     while True:
-        if check_force_condition(axis=DR_AXIS_Z, min=20, ref=None):
+        if check_force_condition(axis=DR_AXIS_Z, min=25, ref=None):
             break
             
     release_force(time=0.0)
@@ -63,7 +64,8 @@ for pallet_index in range(0, total_count):
     movel(Approach_Pose1, vel=150, acc=300)
 
     compl()
-    amovel(pos_gripper_reach_point, mod=DR_MV_MOD_REL)
+    release()
+    movel(pos_gripper_reach_point, vel=150, acc=300, mod=DR_MV_MOD_REL)
     grasp()
     wait(0.5)
 
