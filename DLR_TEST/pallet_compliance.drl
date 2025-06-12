@@ -76,7 +76,8 @@ for pallet_index in range(0, total_count):
     release()
     wait(0.5)
     movel(Approach_Pose2, vel=150, acc=300)    
-    #movel(Approach_Pose, vel=150, acc=300) 
+    grasp()
+    movel(Approach_Pose, vel=150, acc=300) 
 
 
 # --- 2 to 1  ---    
