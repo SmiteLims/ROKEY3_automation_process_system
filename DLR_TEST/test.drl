@@ -66,3 +66,9 @@ for idx in range(0, total_count):
     check_bar()
     wait(0.2)
              # b. 최종 목적지로 이동
+
+'''
+3단계 64
+2단계 54
+1단계 44
+'''
