@@ -1,0 +1,37 @@
+# ROS2 build files
+/build/
+/install/
+/log/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Colcon metadata
+.colcon/
+
+# VSCode or other IDE settings (optional)
+.vscode/
+.idea/
+
+# ROS2 launch/log/debug-related
+*.launch.py~
+*.launch~
+*.log
+
+# Backup files
+*~
+*.swp
+*.bak
+
+# CMake-generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# ROS2 workspace-level ignore
+*.rosinstall
+.rosinstall
