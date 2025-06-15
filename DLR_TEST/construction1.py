@@ -85,10 +85,12 @@ def main(args=None):
     pos_home = posj(0, 0, 90, 0, 90, 0)
 
     # location : row 2, column 1
-    block_to_grip = posj(-4.92, 10.39, 105.79, 0.07, 63.83, -2.19)
+    # block_to_grip = posj(-4.92, 10.39, 105.79, 0.07, 63.83, -2.19)
+    block_to_grip = posx(511.950, -34.250, 297.540, 5.95, 179.89, 9.55)
 
     # location : row 2, column 2
-    block_to_place = posj(-4.18, 24.58, 86.28, 0.19, 69.13, -1.09)
+    # block_to_place = posj(-4.18, 24.58, 86.28, 0.19, 69.13, -1.09)
+    block_to_place = posx(512.12, -34.26, 254.68, 13.02, 179.99, 16.61)
 
     block_to_grip_up = trans(block_to_grip, posx(0, 0, 100, 0, 0, 0))
     block_to_place_up = trans(block_to_place, posx(0, 0, 100, 0, 0, 0))
