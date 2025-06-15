@@ -37,19 +37,12 @@ def grip():
     set_digital_output(2, 0)
     # 그리퍼 닫힘
    
-    while get_digital_input(1) == 0: # 그리퍼가 닫힐 때까지 기다림
-       continue
-    return
        
 def release():
 
     set_digital_output(1, 0)
     set_digital_output(2, 1)
     # 그리퍼 열림
-   
-    while get_digital_input(2) == 0: # 그리퍼가 완전히 열릴 때까지 기다림
-        continue
-    return
 
 
 ############ Main ##############
@@ -72,6 +65,7 @@ def main(args=None):
             get_tool_force,
             DR_FC_MOD_REL,
             DR_AXIS_Z,
+            DR_BASE,
         )
 
         from DR_common2 import posx, posj
@@ -81,97 +75,91 @@ def main(args=None):
         return
 
 
-    ##### Pose Define ####
+    ##### POSE DEFINITION ####
+    # location : home 
     pos_home = posj(0, 0, 90, 0, 90, 0)
 
+    # position for lego should be written 100 upward (Z + 100 from original position)
     # location : row 2, column 1
-    # posJ is for movej
-    block_to_grip_j = posj(-4.92, 10.39, 105.79, 0.07, 63.83, -2.19)
-    block_to_grip = posx(401.55, -31.29, 253.88, 0.43, -179.99, 3.66)
+    block_to_grip = posx(401.55, -31.29, 353.88, 0.43, -179.99, 3.66)
 
     # location : row 2, column 2
-    # posJ is for movej
-    block_to_place_j = posj(-4.18, 24.58, 86.28, 0.19, 69.13, -1.09)
-    block_to_place = posx(512.12, -34.26, 254.68, 12.66, 179.99, 16.25)
+    block_to_place = posx(512.12, -34.26, 354.68, 12.66, 179.99, 16.25)
 
     # Just to go up
-    block_to_grip_up = trans(block_to_grip, posx(0, 0, 100, 0, 0, 0))
-    block_to_place_up = trans(block_to_place, posx(0, 0, 100, 0, 0, 0))
+    block_to_down = posx(0,0,-100,0,0,0)
 
+    # set_tool("Tool Weight_2FG")
+    # set_tcp("2FG_TCP")
 
-    set_tool("Tool Weight_2FG")
-    set_tcp("2FG_TCP")
+    while rclpy.ok():
 
-    # while rclpy.ok():
-
-    if(release_force() == 0):
-        print("release force")
+        if(release_force() == 0):
+            print("release force")
         mwait(0.5)
-    if(release_compliance_ctrl() == 0) :
-         print("release compliance ctrl")
+        if(release_compliance_ctrl() == 0) :
+             print("release compliance ctrl")
 
-    # 동작 전 그리퍼 열림 확인
-    release()
-    print("Gripper Release")
+        # 동작 전 그리퍼 열림 확인
+        release()
+        print("Gripper Release")
 
-    # Home Pose
-    movel(block_to_grip_up, vel = 30, acc = 30)
-    # mwait(0.5)
+        # Home Pose
+        movel(block_to_grip, vel = 30, acc = 30)
+        # mwait(0.5)
 
-    print("블럭 위로 이동")
-    mwait(5)
+        print("블럭 위로 이동")
+        mwait(0.5)
 
-    movel(block_to_grip, vel = 30, acc = 30, mod=1) #블럭 위치로 이동
-    print("블럭 그립 위치로 다운")
-    mwait(0.5)
-    grip() # 블럭 집기
-    print("블럭 집기")
-    mwait(0.5)
-    movel(block_to_grip_up, vel = 30, acc = 30, mod=1) #블럭 들어올리기
-    print("블럭 들기")
+        movel(block_to_down, vel = 30, acc = 30, mod=1) #블럭 위치로 이동
+        print("블럭 그립 위치로 다운")
+        mwait(0.5)
+        grip() # 블럭 집기
+        print("블럭 집기")
+        mwait(0.5)
+        movel(block_to_grip, vel = 30, acc = 30) #블럭 들어올리기
+        print("블럭 들기")
 
 
         # Assemble_1
-    movel(block_to_place_up, vel = 30, acc = 30)
+        movel(block_to_place, vel = 30, acc = 30)
 
-    ret = task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
-    if ret == 0:
-        print("Compliance_ctrl Set")
-    else:
-        print("Compliance_ctrl failed!!")
+        ret = task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+        if ret == 0:
+             print("Compliance_ctrl Set")
+        else:
+             print("Compliance_ctrl failed!!")
 
-    time.sleep(1)
-    ret = set_desired_force(fd=[0, 0, -20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-    if ret == 0:
-        print("set_desired_force Set")
-    else:
-        print("set_desired_force Set Failed!!!!!")
+        time.sleep(1)
+        ret = set_desired_force(fd=[0, 0, -20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+        if ret == 0:
+             print("set_desired_force Set")
+        else:
+             print("set_desired_force Set Failed!!!!!")
 
-    time.sleep(1)
-    force_condition = check_force_condition(DR_AXIS_Z, max=30) 
-    print("force_condition Start : ", force_condition)
-    # print("get_tool_force", get_tool_force)
+        time.sleep(1)
+        force_condition = check_force_condition(DR_AXIS_Z, max=30) 
+        print("force_condition Start : ", force_condition)
+        # print("get_tool_force", get_tool_force)
 
-    while (force_condition > -1): # 힘제어로 블럭 놓기
-        force_condition = check_force_condition(DR_AXIS_Z, max=10)
+        while (force_condition > -1): # 힘제어로 블럭 놓기
+            force_condition = check_force_condition(DR_AXIS_Z, max=10)
             # print("Force Check: ", force_condition)
         
-    if(release_force() == 0):
-        print("release force")
-    time.sleep(0.1)
-    if(release_compliance_ctrl() == 0) :
-        print("release compliance ctrl")
-    time.sleep(0.1)
+        if(release_force() == 0):
+            print("release force")
+        time.sleep(0.1)
+        if(release_compliance_ctrl() == 0) :
+             print("release compliance ctrl")
+        time.sleep(0.1)
 
-    release()
-
-    mwait(0.5)
-
-    movel(block_to_place_up, vel = 30, acc = 30, mod=1)
+        release()
+        print("여긴가")
+        mwait(0.5)
+        print("저긴가")
+        movel(block_to_place, vel = 30, acc = 30)
 
 
     rclpy.shutdown()
 if __name__ == "__main__":
     main()
-
-
