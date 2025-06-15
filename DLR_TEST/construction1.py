@@ -85,29 +85,19 @@ def main(args=None):
     pos_home = posj(0, 0, 90, 0, 90, 0)
 
     # location : row 2, column 1
-    # block_to_grip = posj(-4.92, 10.39, 105.79, 0.07, 63.83, -2.19)
+    # posJ is for movej
+    block_to_grip_j = posj(-4.92, 10.39, 105.79, 0.07, 63.83, -2.19)
     block_to_grip = posx(511.950, -34.250, 297.540, 5.95, 179.89, 9.55)
 
     # location : row 2, column 2
-    # block_to_place = posj(-4.18, 24.58, 86.28, 0.19, 69.13, -1.09)
+    # posJ is for movej
+    block_to_place_j = posj(-4.18, 24.58, 86.28, 0.19, 69.13, -1.09)
     block_to_place = posx(512.12, -34.26, 254.68, 13.02, 179.99, 16.61)
 
+    # Just to go up
     block_to_grip_up = trans(block_to_grip, posx(0, 0, 100, 0, 0, 0))
     block_to_place_up = trans(block_to_place, posx(0, 0, 100, 0, 0, 0))
 
-
-
-    # block_1_grip = posx(322.63, -269.22, 55.76, 53.41, -179.57, 53.82)
-    # block_2_grip = posx(395.02, -272.56, 44.0, 2.06, -179.34, 2.1) 
-
-    # block_1_grip_down = posx(0, 0, -40, 0, 0, 0)
-    # block_1_grip_up = posx(0, 0, 100, 0, 0, 0)
-
-    # block_2_grip_down = posx(0, 0, -30, 0, 0, 0)
-    # block_2_grip_up = posx(0, 0, 100, 0, 0, 0)
-
-    # target1 = posx(379.44, -110.61, 45.07, 30.37, -179.54, 30.45) # 블럭1 놓을 위치의 위로 이동
-    # target2 = posx(387.24, -113.72, 55.11, 35.65, -179.46, 35.8) # 블럭2 놓을 위치의 위로 이동
 
     set_tool("Tool Weight_2FG")
     set_tcp("2FG_TCP")
@@ -125,7 +115,7 @@ def main(args=None):
         print("Gripper Release")
 
         # Home Pose
-        movej(block_to_grip_up, vel = 30, acc = 30)
+        movel(block_to_grip_up, vel = 30, acc = 30)
         # mwait(0.5)
 
         ########### Block 1 Assemble ############
@@ -144,7 +134,7 @@ def main(args=None):
 
 
         # Assemble_1
-        movej(block_to_place_up, vel = 30, acc = 30)
+        movel(block_to_place_up, vel = 30, acc = 30)
 
         ret = task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
         if ret == 0:
