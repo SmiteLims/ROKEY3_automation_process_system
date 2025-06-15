@@ -87,12 +87,12 @@ def main(args=None):
     # location : row 2, column 1
     # posJ is for movej
     block_to_grip_j = posj(-4.92, 10.39, 105.79, 0.07, 63.83, -2.19)
-    block_to_grip = posx(511.950, -34.250, 297.540, 5.95, 179.89, 9.55)
+    block_to_grip = posx(401.55, -31.29, 253.88, 0.43, -179.99, 3.66)
 
     # location : row 2, column 2
     # posJ is for movej
     block_to_place_j = posj(-4.18, 24.58, 86.28, 0.19, 69.13, -1.09)
-    block_to_place = posx(512.12, -34.26, 254.68, 13.02, 179.99, 16.61)
+    block_to_place = posx(512.12, -34.26, 254.68, 12.66, 179.99, 16.25)
 
     # Just to go up
     block_to_grip_up = trans(block_to_grip, posx(0, 0, 100, 0, 0, 0))
@@ -118,8 +118,6 @@ def main(args=None):
         movel(block_to_grip_up, vel = 30, acc = 30)
         # mwait(0.5)
 
-        ########### Block 1 Assemble ############
-        # Block_1 Grip
         print("블럭 위로 이동")
         mwait(0.5)
 
