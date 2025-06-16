@@ -85,12 +85,23 @@ def main(args=None):
     origin3 = posx(557.22, 259.47, height_default, 24.23, -179.91, -44.71)
     origin4 = posx(496.55, 257.55, height_default, 25.12, -179.99, -43.56)
     origin_lst = [origin1, origin2, origin3, origin4]
+    origin1up = posx(460.99, 305.87, height_default+200, 24.63, 179.16, -44.25)
+    origin2up = posx(465.66, 203.52, height_default+200, 85.67, -179.82, 17.02)
+    origin3up = posx(557.22, 259.47, height_default+200, 24.23, -179.91, -44.71)
+    origin4up = posx(496.55, 257.55, height_default+200, 25.12, -179.99, -43.56)
+    origin_lst_up = [origin1up, origin2up, origin3up, origin4up]
+
 
     install1 = posx(188.08, 182.3, height_default, 51.18, 180, -17.25)
     install2 = posx(248.51, 95.12, height_default, 3.39, -180, -63.98)
     install3 = posx(295.48, 189.99, height_default, 33.81, -179.99, -33.63)
     install4 = posx(246.75, 155.84, height_default, 28.62, 179.99, -38.52)
     install_lst = [install1, install2, install3, install4]
+    install1up = posx(188.08, 182.3, height_default+200, 51.18, 180, -17.25)
+    install2up = posx(248.51, 95.12, height_default+200, 3.39, -180, -63.98)
+    install3up = posx(295.48, 189.99, height_default+200, 33.81, -179.99, -33.63)
+    install4up = posx(246.75, 155.84, height_default+200, 28.62, 179.99, -38.52)
+    install_lst_up = [install1up, install2up, install3up, install4up]
     
     if rclpy.ok():
         if input("Type in start") == "start":
@@ -101,7 +112,7 @@ def main(args=None):
 
             for i in range(4):
                 if i == 3:
-                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    movel(origin_lst_up[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
                     time.sleep(0.5)
                     movel(origin_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
                     grip()
