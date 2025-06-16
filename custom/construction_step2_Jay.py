@@ -180,19 +180,31 @@ def main(args=None):
 
                 task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
                 time.sleep(1)
-                set_desired_force(fd=[0, 0, -20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                 time.sleep(1)
                 force_condition = check_force_condition(DR_AXIS_Z, max=30)
 
                 while (force_condition == 0): # 힘 제어로 블럭 놓기
-                    force_condition = check_force_condition(DR_AXIS_Z, max=20) # 조건 만족하면 0 (ROS2에서)
+                    force_condition = check_force_condition(DR_AXIS_Z, max=30) # 조건 만족하면 0 (ROS2에서)
 
                 release_force()
                 release_compliance_ctrl()
                 release()
                 mwait(0.2)
                 movel(block_to_place, vel = 30, acc = 30)
-
+                mwait(0.2)
+                time.sleep(1)
+                task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                time.sleep(1)
+                set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                time.sleep(1)
+                force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                while (force_condition == 0): # 힘 제어로 블럭 놓기
+                    force_condition = check_force_condition(DR_AXIS_Z, max=40) # 조건 만족하면 0 (ROS2에서)
+                release_force()
+                release_compliance_ctrl()
+                mwait(0.2)
+                movel(block_to_place, vel = 30, acc = 30)
             print(f"{idx} 단계 완료, 다음 단계로 넘어갑니다.")
 
     rclpy.shutdown()
