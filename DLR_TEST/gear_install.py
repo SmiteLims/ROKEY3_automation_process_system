@@ -5,7 +5,7 @@ import DR_init
 # for single robot
 ROBOT_ID = "dsr01"
 ROBOT_MODEL = "m0609"
-VELOCITY, ACC = 60, 60
+VELOCITY, ACC = 150,150
 
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
@@ -33,6 +33,7 @@ def main(args=None):
             movej,
             movel,
             amove_periodic,
+            move_periodic,
             trans,
             DR_FC_MOD_REL,
             DR_AXIS_Z,
@@ -74,7 +75,7 @@ def main(args=None):
 
 
 
-    delta = [0,0,100,0,0,0]
+    delta = [0,0,200,0,0,0]
     height_default = 266
     example_amp = [0.0, 0.0, 0.0, 0.0, 0.0, 30.0]
 
@@ -104,7 +105,7 @@ def main(args=None):
     install_lst_up = [install1up, install2up, install3up, install4up]
     
     if rclpy.ok():
-        if input("Type in start") == "start":
+        if input("Type in start ") == "start":
             
             print(f"Moving to joint position: {JReady}")
             movej(JReady, vel=VELOCITY, acc=ACC)
@@ -112,48 +113,59 @@ def main(args=None):
 
             for i in range(4):
                 if i == 3:
-                    movel(origin_lst_up[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
-                    time.sleep(0.5)
+                    x = origin_lst[i].copy()
+                    x[2] = 366
+                    movel(x,vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    # time.sleep(0.5)
                     movel(origin_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
                     grip()
-                    time.sleep(0.5)
-                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
-                    time.sleep(0.5)
-                    movel(trans(install_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
-                    time.sleep(0.5)
+                    time.sleep(0.1)
+                    movel(x,vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.1)
+                    y = install_lst[i].copy()
+                    y[2] = 366
+                    movel(y,vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.1)
                     task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     # movel(install_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
-                    set_desired_force(fd=[0, 0, -10, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                    set_desired_force(fd=[0, 0, -20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                     while True: 
-                        if check_force_condition(DR_AXIS_Z, max=5): ### 조건 주의
+                        if check_force_condition(DR_AXIS_Z, max=18): ### 조건 주의
                             print("Waiting for an external force greater than 5 ")
                             time.sleep(0.1)
                             amove_periodic(amp=example_amp, period=1.0, atime=0.02, repeat=3, ref=DR_TOOL)
-                            time.sleep(0.3)
+                            print('@@@444444444@@@@@')
+                            time.sleep(5)
+                            print('@@@@@@@@@@@@221111@@@@@@@@@')
                             break
-
+                    print('@222222@')
                     release_force()
                     release_compliance_ctrl()
                     release()
-                    movel(trans(install_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.2)
+                    movel(y,vel=VELOCITY,acc=ACC,ref=DR_BASE)
 
 
                 else:
-                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
-                    time.sleep(0.5)
+                    x = origin_lst[i].copy()
+                    x[2] = 366
+                    print(x)
+                    movel(x,vel=VELOCITY,acc=ACC,ref=DR_BASE)
                     movel(origin_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                    print(origin_lst[i])
                     grip()
-                    time.sleep(0.5)
-                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
-                    time.sleep(0.5)
+                    time.sleep(0.3)
+                    movel(x,vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.1)
 
-                    
-                    movel(trans(install_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
-                    time.sleep(0.5)
+                    y = install_lst[i].copy()
+                    y[2] = 366
+                    movel(y,vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.1)
                     movel(install_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
                     release()
-                    time.sleep(0.5)
+                    time.sleep(0.3)
 
     rclpy.shutdown()
 
