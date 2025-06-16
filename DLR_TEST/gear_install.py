@@ -32,9 +32,12 @@ def main(args=None):
             set_tcp,
             movej,
             movel,
+            amove_periodic,
+            trans,
             DR_FC_MOD_REL,
             DR_AXIS_Z,
             DR_BASE,
+            DR_TOOL
         )
 
         from DR_common2 import posx, posj
@@ -54,21 +57,27 @@ def main(args=None):
         print("set for digital output 0 1 for release")
         set_digital_output(2, ON)
         set_digital_output(1, OFF)
-        wait_digital_input(2)
+        time.sleep(0.5)
+
+        # wait_digital_input(2)
 
     def grip():
         print("set for digital output 1 0 for grip")
         set_digital_output(1, ON)
         set_digital_output(2, OFF)
-        wait_digital_input(1)
+        time.sleep(0.5)
+
+        # wait_digital_input(1)
 
     set_tool("Tool Weight_2FG")
     set_tcp("2FG_TCP")
 
 
 
+    delta = [0,0,100,0,0,0]
+    height_default = 266
+    example_amp = [0.0, 0.0, 0.0, 0.0, 0.0, 30.0]
 
-    height_default = 350
     # pos = posx([496.06, 93.46, 300, 20.75, 179.00, 19.09])
     JReady = posj([0, 0, 90, 0, 90, 0])
     origin1 = posx(460.99, 305.87, height_default, 24.63, 179.16, -44.25)
@@ -88,38 +97,53 @@ def main(args=None):
             
             print(f"Moving to joint position: {JReady}")
             movej(JReady, vel=VELOCITY, acc=ACC)
+            release()
 
             for i in range(4):
-
-                movel(origin_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
-                time.sleep(0.5)
-                if i == 4:
+                if i == 3:
+                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.5)
+                    movel(origin_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                    grip()
+                    time.sleep(0.5)
+                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.5)
+                    movel(trans(install_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.5)
                     task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
                     time.sleep(0.5)
-                    set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-                    while not check_force_condition(DR_AXIS_Z, max=10):
-                        print("Waiting for an external force greater than 10 ")
-                        time.sleep(0.5)
-                        pass
+                    # movel(install_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                    set_desired_force(fd=[0, 0, -10, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                    while True: 
+                        if check_force_condition(DR_AXIS_Z, max=5): ### 조건 주의
+                            print("Waiting for an external force greater than 5 ")
+                            time.sleep(0.1)
+                            amove_periodic(amp=example_amp, period=1.0, atime=0.02, repeat=3, ref=DR_TOOL)
+                            time.sleep(0.3)
+                            break
+
                     release_force()
-                    time.sleep(0.5)
                     release_compliance_ctrl()
-                 
-                movel(install_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
-                if i == 4:
+                    release()
+                    movel(trans(install_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
 
+
+                else:
+                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
                     time.sleep(0.5)
-                    task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                    movel(origin_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                    grip()
                     time.sleep(0.5)
-                    set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-                    while not check_force_condition(DR_AXIS_Z, max=10):
-                        print("Waiting for an external force greater than 10 ")
-                        time.sleep(0.5)
-                        pass
-                    release_force()
+                    movel(trans(origin_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
                     time.sleep(0.5)
-                    release_compliance_ctrl()  
-        
+
+                    
+                    movel(trans(install_lst[i],delta,DR_BASE,DR_BASE),vel=VELOCITY,acc=ACC,ref=DR_BASE)
+                    time.sleep(0.5)
+                    movel(install_lst[i], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                    release()
+                    time.sleep(0.5)
+
     rclpy.shutdown()
 
 
