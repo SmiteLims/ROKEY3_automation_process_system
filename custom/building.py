@@ -155,11 +155,14 @@ def main(args=None):
         movel(check_list, vel=150, acc=300, ref=DR_BASE)
         # 팔레트 위치 측정
         check_bar()    
+        movel(check_list, vel=150, acc=300, ref=DR_BASE)
     # 측정 결과 출력
     print('측정 완료')
     print(build_list)
 
 
+    # 건설 시작
+    VELOCITY, ACC = 100, 100
     for idx,buildings in enumerate(build_list):
     
         # initialization
