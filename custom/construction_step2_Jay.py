@@ -49,8 +49,8 @@ except ImportError as e:
 pos_home = posj(0, 0, 90, 0, 90, 0) # home position
 
 # location : lego
-block_long = posx(379.32, 192.52, 233.65+100, 98.77, 179.74, 65.97) # long block position
-block_short = posx(295.97, 17.57, 269.64+100, 179.28, 180.0, 91.38) # shot block position
+block_short = posx(379.32, 192.52, 233.65+100, 98.77, 179.74, 65.97) # long block position
+block_long = posx(295.97, 17.57, 269.64+100, 179.28, 180.0, 91.38) # shot block position
 
 # location : row 1, column 1 (1)
 step_1 = posx(405.56, 128.88, 259.14+100, 23.12, -180, 24.17)
@@ -77,8 +77,6 @@ step_9 = posx(623.47, -128.45, 261.84+100, 167.59, 179.97, 169.52)
 # Just to go up
 block_to_down = posx(0,0,-100,0,0,0)
 
-# etc
-construction_step = 1
 
 # Function Definition
 def grip():
@@ -109,9 +107,11 @@ def main(args=None):
 
 
 
-    estate = [1,2,1,1,2,1,1,2,0] # blueprint interpretation
+    estate = [0,1,0,0,2,0] # blueprint interpretation
+    # estate[0] = 1
 
     if rclpy.ok():
+        
         for idx,buildings in enumerate(estate):
             
             # initialization
@@ -121,8 +121,8 @@ def main(args=None):
             
             # REQUESTED BUILDING CONSTRUCTIONS CHECK 
             if buildings == 0:
-                print(f"{construction_step} 단계에 요청받은 건설 의뢰가 존재하지 않아 다음 단계로 넘어갑니다.")
-                construction_step += 1
+                print(f"{idx} 단계에 요청받은 건설 의뢰가 존재하지 않아 다음 단계로 넘어갑니다.")
+                idx += 1
                 continue
 
             elif buildings == 1:
@@ -185,7 +185,7 @@ def main(args=None):
                 force_condition = check_force_condition(DR_AXIS_Z, max=30)
 
                 while (force_condition == 0): # 힘 제어로 블럭 놓기
-                    force_condition = check_force_condition(DR_AXIS_Z, max=10) # 조건 만족하면 0 (ROS2에서)
+                    force_condition = check_force_condition(DR_AXIS_Z, max=20) # 조건 만족하면 0 (ROS2에서)
 
                 release_force()
                 release_compliance_ctrl()
@@ -193,7 +193,7 @@ def main(args=None):
                 mwait(0.2)
                 movel(block_to_place, vel = 30, acc = 30)
 
-            print(f"{construction_step} 단계 완료, 다음 단계로 넘어갑니다.")
+            print(f"{idx} 단계 완료, 다음 단계로 넘어갑니다.")
 
     rclpy.shutdown()
 if __name__ == "__main__":
