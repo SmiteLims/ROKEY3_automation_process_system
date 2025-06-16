@@ -5,12 +5,10 @@ import DR_init
 import time
 import sys
 
-
 # Configuration for a single robot
 ROBOT_ID = "dsr01"
 ROBOT_MODEL = "m0609"
 VELOCITY, ACC = 60, 60
-ON, OFF = 1, 0
 
 # Initialize DR_init with robot parameters
 DR_init.__dsr__id = ROBOT_ID
@@ -20,19 +18,26 @@ rclpy.init()
 node = rclpy.create_node("brick_assemble_node", namespace=ROBOT_ID)
 DR_init.__dsr__node = node
 
+ON, OFF = 1, 0
+
+# DSR API import
 try:
-        from DSR_ROBOT2 import (
-            get_digital_input,
-            set_digital_output
-        )
-
+    from DSR_ROBOT2 import (
+        get_digital_input, set_digital_output,
+        get_current_posx, trans,
+        set_tool, set_tcp,
+        movej, movel,
+        wait, mwait,
+        task_compliance_ctrl, release_compliance_ctrl,
+        set_desired_force, release_force, check_force_condition,
+        DR_FC_MOD_REL, DR_AXIS_Z,)
+    from DR_common2 import posx, posj
 except ImportError as e:
-        print(f"Error importing DSR_ROBOT2 : {e}")
-        sys,exit()
+    print(f"Error importing DSR_ROBOT2 : {e}")
+    exit()
 
-############ Grippper Grip & Rease ##############
+# Function Definition
 def grip():
-
     set_digital_output(1, 1)
     set_digital_output(2, 0)
     # 그리퍼 닫힘
