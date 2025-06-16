@@ -68,6 +68,9 @@ step_9 = posx(623.47, -128.45, 261.84+100, 167.59, 179.97, 169.52)
 # Just to go up
 block_to_down = posx(0,0,-100,0,0,0)
 
+# etc
+
+
 
 
 def main(args=None):
@@ -93,11 +96,13 @@ def main(args=None):
             release_force,
             release_compliance_ctrl,
             check_force_condition,
+            amove_periodic,
             mwait,
             DR_AXIS_Z,
             DR_BASE,
             DR_MV_MOD_REL,
-            DR_FC_MOD_REL
+            DR_FC_MOD_REL,
+            DR_TOOL
 
         )
 
@@ -137,6 +142,26 @@ def main(args=None):
         release_force(time=0.0)
         release_compliance_ctrl()
     
+    def cement():
+        movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
+        mwait(0.2)
+        movel(cup_down, vel = VELOCITY, acc = ACC) # 내려가기
+        mwait(0.2)
+        grip()
+        mwait(0.2)
+        movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
+        movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
+        amove_periodic(amp=example_amp,period=1.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
+        mwait(5)
+        movel(block_to_place, vel = VELOCITY, acc = ACC) # 붓는 장소 이동
+        movej(posj([0,0,0,0,45,0]),vel=VELOCITY, acc=ACC, ref=DR_MV_MOD_REL) # 기울이기
+        # movel() # 붓기
+        movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
+        mwait(0.2)
+        movel(cup_down, vel = VELOCITY, acc = ACC) # 내려가기
+        mwait(0.2)
+        release()
+
     set_tool("Tool Weight_2FG")
     set_tcp("2FG_TCP")
     
@@ -259,6 +284,15 @@ def main(args=None):
             movel(block_to_place, vel = VELOCITY, acc = ACC)
             mwait(0.2)
             release()
+
+            JReady = posj([0, 0, 90, 0, 90, 0])
+            example_amp = [100.0, 100.0, 0.0, 0.0, 0.0, 30.0]
+            cup_up = posx(468.11, 240.77, 375.27, 166.06, -179.88, 142.05)
+            cup_down = posx(467.59, 243.72, 302.02, 45.37, -179.7, 21.17)
+
+            # Cement Performance
+            if floor == 0:
+                cement()
 
             print(f"{idx} 단계 완료, 다음 단계로 넘어갑니다.")
 
