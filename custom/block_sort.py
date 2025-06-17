@@ -29,6 +29,10 @@ short_pallets = [posx(194.06, -212.82, 272.11, 136.89, 180, 135.3), posx(249.04,
 mid_pallets   = [posx(198.61, -261.26, 270.73, 123.41, 179.99, 121.48), posx(253.2, -259.33, 270.37, 121.97, 179.99, 119.38), posx(301.92, -253.32, 270.1, 147.87, -180, 144.85)]
 tall_pallets  = [posx(203.49, -311.72, 270.01, 116.34, 179.99, 110.69), posx(254.49, -307.87, 269.7, 159.93, -180, 153.76), posx(305.63, -304.16, 269.28, 144.86, -180, 138.41)]
 block_to_down = posx(0, 0, -100, 0, 0, 0)  # 상대적 하강
+# 전역 변수로 선언
+i_short = 0
+i_mid = 0
+i_long = 0
 
 def main(args=None):
     rclpy.init(args=args)
@@ -57,12 +61,18 @@ def main(args=None):
         set_digital_output(1, OFF)
 
     def check_and_grab():
+<<<<<<< HEAD
         set_ref_coord(DR_BASE)
+=======
+        global i_short, i_mid, i_long
+        set_ref_coord(0)
+>>>>>>> 71e4706a305a6c3613b7d29f162b4a38c7fee4ec
         task_compliance_ctrl()
         set_stiffnessx([3000.0]*3 + [200.0]*3)
         set_desired_force([0.0, 0.0, -30.0, 0.0, 0.0, 0.0], [0, 0, 1, 0, 0, 0])
 
         while True:
+<<<<<<< HEAD
             if check_force_condition(axis=DR_AXIS_Z, max=20):
                 break
             
@@ -80,6 +90,79 @@ def main(args=None):
         grip()
         mwait(0.1)
         movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+=======
+            if check_force_condition(axis=DR_AXIS_Z, max=25):
+                release()
+                global i_short, i_mid, i_long
+                print(1)
+                time.sleep(0.2)
+                print(2)
+                z = get_current_posx()[0]
+                if z[2] >= 290:
+                    height = 0
+                elif z[2] >= 280:
+                    height = 1
+                else:
+                    height = 2
+                break
+        print(3)
+        z[2] -= 15.0
+        print(4)
+        time.sleep(0.2)
+        print(5)
+        release_force()
+        release_compliance_ctrl()
+        movel(z, vel=150, acc=300, ref=DR_BASE)
+        print(6)
+        grip()  
+        print(7) 
+        time.sleep(0.2)
+        # ✅ 다시 위로 복귀
+        movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+        time.sleep(0.2)
+
+        if height == 0:
+            movel(short_pallets[i_short], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+            task_compliance_ctrl()
+            z[2] -= 15.0
+            time.sleep(0.2)
+            release_compliance_ctrl()
+            release()
+            movel(z, vel=150, acc=300, ref=DR_BASE)
+            time.sleep(0.2)
+            # ✅ 다시 위로 복귀
+            movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            time.sleep(0.2)
+            i_short +=1
+        elif height == 1:
+            movel(mid_pallets[i_mid], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+            task_compliance_ctrl()
+            z[2] -= 15.0
+            time.sleep(0.2)
+            release_compliance_ctrl()
+            release()
+            movel(z, vel=150, acc=300, ref=DR_BASE)
+            time.sleep(0.2)
+            # ✅ 다시 위로 복귀
+            movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            time.sleep(0.2)
+            i_mid +=1
+        elif height == 2:
+            movel(tall_pallets[i_long], vel=VELOCITY, acc=ACC, ref=DR_BASE)
+            task_compliance_ctrl()
+            z[2] -= 15.0
+            time.sleep(0.2)
+            release_compliance_ctrl()
+            release()
+            movel(z, vel=150, acc=300, ref=DR_BASE)
+            time.sleep(0.2)
+            # ✅ 다시 위로 복귀
+            movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            time.sleep(0.2)      
+            i_long +=1
+
+        return height
+>>>>>>> 71e4706a305a6c3613b7d29f162b4a38c7fee4ec
 
         return
 
