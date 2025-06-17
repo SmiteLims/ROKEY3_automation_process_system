@@ -29,6 +29,10 @@ short_pallets = [posx(194.06, -212.82, 272.11, 136.89, 180, 135.3), posx(249.04,
 mid_pallets   = [posx(198.61, -261.26, 270.73, 123.41, 179.99, 121.48), posx(253.2, -259.33, 270.37, 121.97, 179.99, 119.38), posx(301.92, -253.32, 270.1, 147.87, -180, 144.85)]
 tall_pallets  = [posx(203.49, -311.72, 270.01, 116.34, 179.99, 110.69), posx(254.49, -307.87, 269.7, 159.93, -180, 153.76), posx(305.63, -304.16, 269.28, 144.86, -180, 138.41)]
 block_to_down = posx(0, 0, -100, 0, 0, 0)  # 상대적 하강
+# 전역 변수로 선언
+i_short = 0
+i_mid = 0
+i_long = 0
 
 def main(args=None):
     rclpy.init(args=args)
@@ -91,6 +95,46 @@ def main(args=None):
         # ✅ 다시 위로 복귀
         movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
         time.sleep(0.2)
+
+        if height == 0:
+            movel(short_pallets[i_short], vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            task_compliance_ctrl()
+            z[2] -= 15.0
+            time.sleep(0.2)
+            release_compliance_ctrl()
+            release()
+            movel(z, vel=150, acc=300, ref=DR_BASE)
+            time.sleep(0.2)
+            # ✅ 다시 위로 복귀
+            movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            time.sleep(0.2)
+            i_short +=1
+        elif height == 1:
+            movel(mid_pallets[i_mid], vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            task_compliance_ctrl()
+            z[2] -= 15.0
+            time.sleep(0.2)
+            release_compliance_ctrl()
+            release()
+            movel(z, vel=150, acc=300, ref=DR_BASE)
+            time.sleep(0.2)
+            # ✅ 다시 위로 복귀
+            movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            time.sleep(0.2)
+            i_mid +=1
+        elif height == 2:
+            movel(tall_pallets[i_long], vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            task_compliance_ctrl()
+            z[2] -= 15.0
+            time.sleep(0.2)
+            release_compliance_ctrl()
+            release()
+            movel(z, vel=150, acc=300, ref=DR_BASE)
+            time.sleep(0.2)
+            # ✅ 다시 위로 복귀
+            movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            time.sleep(0.2)      
+            i_long +=1
 
         return height
 
