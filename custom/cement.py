@@ -110,7 +110,7 @@ def main(args=None):
     
     
     JReady = posj([0, 0, 90, 0, 90, 0])
-    example_amp = [100.0, 0, 0.0, 0.0, 0.0, 30.0]
+    example_amp = [150.0, 0, 0.0, 0.0, 0.0, 30.0]
     cup_up = posx(468.11, 240.77, 375.27, 166.06, -179.88, 142.05)
     cup_down = posx(467.59, 243.72, 302.02, 45.37, -179.7, 21.17)
     target_point1 = posx(398.74, 169.38, 309.46, 89.43, -128.43, -90.38) 
@@ -137,21 +137,21 @@ def main(args=None):
 
         # step 2 mixing
         movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
-        move_spiral(rev=9.5,rmax=20.0,lmax=50.0,time=20.0,axis=DR_AXIS_Z,ref=DR_TOOL)
+        move_spiral(rev=3,vel=50, acc=30, rmax=20.0,lmax=0,time=20.0,axis=DR_AXIS_Z,ref=DR_TOOL)
         movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
 
 
         # step 3 pavement
         movel(target_point1, vel = VELOCITY, acc = ACC) # target_point
-        amove_periodic(amp=example_amp,period=1.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
+        amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
         mwait(5)
 
         movel(target_point2, vel = VELOCITY, acc = ACC) # target_point
-        amove_periodic(amp=example_amp,period=1.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
+        amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
         mwait(5)
 
         movel(target_point3, vel = VELOCITY, acc = ACC) # target_point
-        amove_periodic(amp=example_amp,period=1.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
+        amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
         mwait(5)
 
         # step 4 organization
@@ -167,7 +167,7 @@ def main(args=None):
     set_tcp("2FG_TCP")
 
     if rclpy.ok():        
-        
+
         # 로봇 위치 초기화
         release()
         movej(JReady, vel = 80, acc = 80)
