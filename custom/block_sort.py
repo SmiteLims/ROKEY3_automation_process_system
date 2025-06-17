@@ -1,17 +1,16 @@
 import rclpy
 import DR_init
 import time
-import sys
 from DR_common2 import posx, posj
 
 ROBOT_ID = "dsr01"
 ROBOT_MODEL = "m0609"
-VELOCITY, ACC = 100, 100
+VELOCITY, ACC = 30, 30
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
 ON, OFF = 1, 0
 
-# 블럭 감지 위치
+# 감지 위치 정의
 nocontact_z = 350.0
 position_lst = [
     posx(198.21,-58.48,nocontact_z,147.25,-179.99,145.78),
@@ -25,17 +24,15 @@ position_lst = [
     posx(320.45,-155.79,nocontact_z,174.63,176.23,171.84)
 ]
 
-# 상대적으로 아래로 이동
-block_to_down = posx(0, 0, -10, 0, 0, 0)
-
 # 팔레트 위치 (TODO: 실제 좌표 입력)
 short_pallets = [posx(194.06, -212.82, 272.11, 136.89, 180, 135.3), posx(249.04, -208.6, 271.62, 131.21, 180, 129.54), posx(299.15, -204.28, 271.21, 125.49, 180, 123.58)]
 mid_pallets   = [posx(198.61, -261.26, 270.73, 123.41, 179.99, 121.48), posx(253.2, -259.33, 270.37, 121.97, 179.99, 119.38), posx(301.92, -253.32, 270.1, 147.87, -180, 144.85)]
 tall_pallets  = [posx(203.49, -311.72, 270.01, 116.34, 179.99, 110.69), posx(254.49, -307.87, 269.7, 159.93, -180, 153.76), posx(305.63, -304.16, 269.28, 144.86, -180, 138.41)]
+block_to_down = posx(0, 0, -100, 0, 0, 0)  # 상대적 하강
 
 def main(args=None):
     rclpy.init(args=args)
-    node = rclpy.create_node("rokey_block_sorter", namespace=ROBOT_ID)
+    node = rclpy.create_node("rokey_sorter", namespace=ROBOT_ID)
     DR_init.__dsr__node = node
 
     try:
@@ -48,7 +45,7 @@ def main(args=None):
             DR_AXIS_Z, DR_BASE, DR_MV_MOD_REL
         )
     except ImportError as e:
-        print(f"DSR_ROBOT2 import 오류: {e}")
+        print(f"Error importing DSR_ROBOT2: {e}")
         return
 
     def grip():
@@ -56,8 +53,8 @@ def main(args=None):
         set_digital_output(2, OFF)
 
     def release():
-        set_digital_output(1, OFF)
         set_digital_output(2, ON)
+        set_digital_output(1, OFF)
 
     def check_and_grab():
         set_ref_coord(0)
@@ -68,35 +65,36 @@ def main(args=None):
         while True:
             if check_force_condition(axis=DR_AXIS_Z, max=25):
                 z = get_current_posx()[0][2]
-                print(f"측정된 높이 Z: {z}")
                 if z >= 290:
-                    code = 3
+                    height = 3
                 elif z >= 280:
-                    code = 2
+                    height = 2
                 elif z >= 270:
-                    code = 1
+                    height = 1
                 else:
-                    code = 0
+                    height = 0
                 break
 
         release_force()
         release_compliance_ctrl()
-        release()
-        mwait(0.2)
-        movel(block_to_down, vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
-        mwait(0.2)
-        grip()
-        mwait(0.2)
-        return code
 
-    def pick_and_place(pick_pos, place_pos):
-        movej(JReady, vel=30, acc=30)
-        movel(pick_pos, vel=VELOCITY, acc=ACC)
-        mwait(0.2)
-        movel(place_pos, vel=VELOCITY, acc=ACC)
-        mwait(0.2)
+        if height == 0:
+            print("블럭 없음: 집기 생략")
+            return 0
+
         release()
-        mwait(0.2)
+        time.sleep(0.2)
+        movel(block_to_down, vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+        time.sleep(0.2)
+        grip()
+        time.sleep(0.2)
+        return height
+
+    def place_block(place_pos):
+        movel(place_pos, vel=VELOCITY, acc=ACC)
+        time.sleep(0.2)
+        release()
+        time.sleep(0.2)
         movel(place_pos, vel=VELOCITY, acc=ACC)
 
     set_tool("Tool Weight_2FG")
@@ -107,35 +105,36 @@ def main(args=None):
 
     short_blocks, mid_blocks, tall_blocks = [], [], []
 
+    print("=== 블럭 감지 및 그 자리에서 집기 시작 ===")
     for idx, pos in enumerate(position_lst):
-        print(f"[{idx+1}/9] 위치 감지 중...")
-        movel(pos, vel=VELOCITY, acc=ACC)
-        height_code = check_and_grab()
+        print(f"[{idx+1}/9] 감지 위치 이동")
+        movel(pos, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+        height = check_and_grab()
 
-        if height_code == 1:
-            short_blocks.append((idx, pos))
-        elif height_code == 2:
-            mid_blocks.append((idx, pos))
-        elif height_code == 3:
-            tall_blocks.append((idx, pos))
-        else:
-            print(f"{idx+1}번: 블럭 없음 (스킵)")
-        movel(pos, vel=VELOCITY, acc=ACC)
+        if height == 1:
+            short_blocks.append(pos)
+        elif height == 2:
+            mid_blocks.append(pos)
+        elif height == 3:
+            tall_blocks.append(pos)
 
-    print(f"감지 완료: short={len(short_blocks)}, mid={len(mid_blocks)}, tall={len(tall_blocks)}")
+        movel(pos, vel=VELOCITY, acc=ACC, ref=DR_BASE)  # 다시 원위치
 
-    for i in range(3):
-        if i < len(short_blocks):
-            _, pick_pos = short_blocks[i]
-            pick_and_place(pick_pos, short_pallets[i])
-        if i < len(mid_blocks):
-            _, pick_pos = mid_blocks[i]
-            pick_and_place(pick_pos, mid_pallets[i])
-        if i < len(tall_blocks):
-            _, pick_pos = tall_blocks[i]
-            pick_and_place(pick_pos, tall_pallets[i])
+    print("=== 분류 완료: short/mid/tall ===")
+    print(f"short: {len(short_blocks)}, mid: {len(mid_blocks)}, tall: {len(tall_blocks)}")
 
-    print("✅ 모든 블럭 분류 완료")
+    def sort_and_place(block_list, pallet_list, label):
+        for i in range(min(len(block_list), 3)):
+            movej(JReady, vel=30, acc=30)
+            movel(block_list[i], vel=VELOCITY, acc=ACC)
+            place_block(pallet_list[i])
+            print(f"{label} 블럭 {i+1} 정렬 완료")
+
+    sort_and_place(short_blocks, short_pallets, "short")
+    sort_and_place(mid_blocks, mid_pallets, "mid")
+    sort_and_place(tall_blocks, tall_pallets, "tall")
+
+    print("✅ 모든 블럭 정렬 완료")
     rclpy.shutdown()
 
 if __name__ == "__main__":
