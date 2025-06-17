@@ -69,32 +69,25 @@ def main(args=None):
                 time.sleep(0.2)
                 print(2)
                 z = get_current_posx()[0]
+                if z[2] >= 290:
+                    height = 0
+                elif z[2] >= 280:
+                    height = 1
+                else:
+                    height = 2
                 break
         print(3)
-        z[2] += 5.0
+        z[2] -= 15.0
         print(4)
         time.sleep(0.2)
         print(5)
+        release_force()
+        release_compliance_ctrl()
         movel(z, vel=150, acc=300, ref=DR_BASE)
         print(6)
         grip()  
         print(7) 
-        release_force()
-        release_compliance_ctrl()
-
-        if height == 0:
-            print("블럭 없음: 집기 생략")
-            return 0
-
-        # ✅ 측정 직후 살짝 더 내려가서 잡기
-        release()
         time.sleep(0.2)
-        print("⬇️ 블럭 위치에서 하강 및 그리퍼 동작")
-        movel(block_to_down, vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
-        time.sleep(0.2)
-        grip()
-        time.sleep(0.2)
-
         # ✅ 다시 위로 복귀
         movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
         time.sleep(0.2)
