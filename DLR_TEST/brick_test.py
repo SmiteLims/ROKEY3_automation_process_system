@@ -103,9 +103,7 @@ def main(args=None):
     movel(step_1, vel = VELOCITY, acc = ACC)
 
     task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
-    mwait(0.5)
     set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-    mwait(0.5)
     force_condition = check_force_condition(DR_AXIS_Z, max=20)
 
     while (force_condition == 0): # 힘 제어로 블럭 놓기
