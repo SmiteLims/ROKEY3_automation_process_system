@@ -188,5 +188,23 @@ def main(args=None):
         
     rclpy.shutdown()
 
+
+
+
+'''raceback (most recent call last):
+  File "/home/rokey/ros_ws/install/rokey/lib/rokey/pick_place", line 33, in <module>
+    sys.exit(load_entry_point('rokey==0.0.0', 'console_scripts', 'pick_place')())
+  File "/home/rokey/ros_ws/build/rokey/rokey/advance/pick_place.py", line 169, in main
+    check_and_grab()
+  File "/home/rokey/ros_ws/build/rokey/rokey/advance/pick_place.py", line 107, in check_and_grab
+    temp = get_current_posx()[0]
+  File "/home/rokey/ros2_ws/install/dsr_common2/lib/dsr_common2/imp/DSR_ROBOT2.py", line 956, in get_current_posx
+    pos.append(posx_info[0][i])
+IndexError: list index out of range
+[ros2run]: Process exited with failure 1
+rokey@rokey-550XBE-350XBE:~/ros_ws$''' 
+
+
+
 if __name__ == "__main__":
     main()
