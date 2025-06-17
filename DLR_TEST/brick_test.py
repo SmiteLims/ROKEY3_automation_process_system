@@ -103,55 +103,78 @@ def main(args=None):
     movel(step_1, vel = VELOCITY, acc = ACC)
 
     task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
-    time.sleep(1)
+    mwait(0.5)
     set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-    time.sleep(1)
-    force_condition = check_force_condition(DR_AXIS_Z, max=30)
+    mwait(0.5)
+    force_condition = check_force_condition(DR_AXIS_Z, max=20)
 
     while (force_condition == 0): # 힘 제어로 블럭 놓기
-        force_condition = check_force_condition(DR_AXIS_Z, max=30) # 조건 만족하면 0 (ROS2에서)
+        force_condition = check_force_condition(DR_AXIS_Z, max=20) # 조건 만족하면 0 (ROS2에서)
         
     release_force()
     release_compliance_ctrl()
     release()
+
     mwait(0.2)
     movel(step_1, vel = VELOCITY, acc = ACC)
     mwait(0.2)
     grip()
-    time.sleep(1)
+    mwait(0.2)
+
     task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
-    time.sleep(1)
+    mwait(0.2)
     set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-    time.sleep(1)
-    force_condition = check_force_condition(DR_AXIS_Z, max=40)
+    mwait(0.2)
+    force_condition = check_force_condition(DR_AXIS_Z, max=30)
     while (force_condition == 0): # 힘 제어로 블럭 놓기
-        force_condition = check_force_condition(DR_AXIS_Z, max=40) # 조건 만족하면 0 (ROS2에서)
+        force_condition = check_force_condition(DR_AXIS_Z, max=30) # 조건 만족하면 0 (ROS2에서)
+
     release_force()
     release_compliance_ctrl()
-    x = get_current_posx()[0]
+
+    x, _ = get_current_posx()
     x[2] += 10
     movel(x, vel=150, acc=300, ref=DR_BASE)
     release()
-    time.sleep(0.2)
+    mwait(0.2)
+
     x[2] -= 25
-    time.sleep(0.2)
+    mwait(0.2)
+
     movel(x, vel=150, acc=300, ref=DR_BASE)
     grip()
-    time.sleep(0.5)
-    cur_pose = get_current_posx()[0]          # 현재 TCP pose 받아옴
-    new_pose = cur_pose.copy()             # 값 복사해서 새 pose 만들기
-    new_pose[4] += 30                      # Z축 회전(Rz)에 30도 추가
-    movel(new_pose, vel=20, acc=20)        # 위치는 그대로, 방향만 바뀐 상태로 이동
-
     mwait(0.2)
-    movel(step_1, vel = VELOCITY, acc = ACC)
-    mwait(0.2)
-    release()
 
-    JReady = posj([0, 0, 90, 0, 90, 0])
-    example_amp = [100.0, 100.0, 0.0, 0.0, 0.0, 30.0]
-    cup_up = posx(468.11, 240.77, 375.27, 166.06, -179.88, 142.05)
-    cup_down = posx(467.59, 243.72, 302.02, 45.37, -179.7, 21.17)
+    task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+    mwait(0.2)
+    set_desired_force(fd=[10, 0, -5, 0, 20, 0], dir=[1, 0, 1, 0, 1, 0], mod=DR_MV_MOD_REL)
+    mwait(0.1)
+
+
+    while True: # 힘 제어로 블럭 놓기
+        mwait(3)
+        break
+
+    release_force()
+    release_compliance_ctrl()
+    movel(posx(0,0,-100,0,0,0), vel=150, acc=300, ref=DR_TOOL,mod=DR_MV_MOD_REL)
+
+
+# #################################################################################
+#     cur_pose, _ = get_current_posx()          # 현재 TCP pose 받아옴
+#     new_pose = cur_pose.copy()             # 값 복사해서 새 pose 만들기
+#     new_pose[4] += 30                      # Z축 회전(Rz)에 30도 추가
+#     movel(new_pose, vel=20, acc=20)        # 위치는 그대로, 방향만 바뀐 상태로 이동
+
+#     mwait(0.2)
+#     movel(step_1, vel = VELOCITY, acc = ACC)
+#     mwait(0.2)
+#     release()
+
+#     JReady = posj([0, 0, 90, 0, 90, 0])
+#     example_amp = [100.0, 100.0, 0.0, 0.0, 0.0, 30.0]
+#     cup_up = posx(468.11, 240.77, 375.27, 166.06, -179.88, 142.05)
+#     cup_down = posx(467.59, 243.72, 302.02, 45.37, -179.7, 21.17)
     rclpy.shutdown()
 
 if __name__ == "__main__":

@@ -66,7 +66,7 @@ step_9 = posx(558.16, -115.92, nocontact_z, 158.13, -179.89, -22.01)
 # difference
 # Just to go up
 block_to_down = posx(0,0,-100,0,0,0)
-
+blueprint_status = False
 
 
 with open('/home/rokey/ros_ws/building_text/build_list.txt', 'r', encoding='utf-8') as file:
@@ -122,8 +122,15 @@ def main(args=None):
     except ImportError as e:
         print(f"Error importing DSR_ROBOT2 : {e}")
         return
+    
+    
     JReady = posj([0, 0, 90, 0, 90, 0])
-    example_amp = [100.0, 100.0, 0.0, 0.0, 0.0, 30.0]
+    example_amp = [100.0, 0, 0.0, 0.0, 0.0, 30.0]
+    cup_up = posx(468.11, 240.77, 375.27, 166.06, -179.88, 142.05)
+    cup_down = posx(467.59, 243.72, 302.02, 45.37, -179.7, 21.17)
+    target_point1 = posx(398.74, 169.38, 309.46, 89.43, -128.43, -90.38) 
+    target_point2 = posx(487.05, 173.94, 295.53, 89.61, -128.46, -90.41) 
+    target_point3 = posx(566.14, 128.39, 282.95, 89.11, -128.23, -91)
 
     def grip():
         set_digital_output(1,ON)
@@ -156,7 +163,8 @@ def main(args=None):
         release_force(time=0.0)
         release_compliance_ctrl()
     
-    def cement(cup_up, cup_down, target_point1, target_point2, target_point3):
+    def cement():
+        global cup_up, cup_down, target_point1, target_point2, target_point3
         # step 1 truck move
         movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
         mwait(0.1)
@@ -169,6 +177,8 @@ def main(args=None):
         # step 2 mixing
         movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
         move_spiral(rev=9.5,rmax=20.0,lmax=50.0,time=20.0,axis=DR_AXIS_Z,ref=DR_TOOL)
+        movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
+
 
         # step 3 pavement
         movel(target_point1, vel = VELOCITY, acc = ACC) # target_point
@@ -201,6 +211,15 @@ def main(args=None):
     release()
     movej(JReady, vel = 80, acc = 80)
     grip()
+    mwait(0.1)
+
+    #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
+    # Pavement #
+    cement()
+    mwait(0.1)
+
+    #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#
+
      # 시작
     print('측정 시작')
     if i >= 9:
@@ -262,7 +281,7 @@ def main(args=None):
             block_to_place = step_map.get(idx)
             if block_to_place is None:
                 continue
-
+            
             # REPEAT UNTIL 4TH FLOOR CONSTRUCTED.
             for floor in range(4):
                 print(f'{floor +1}층')
