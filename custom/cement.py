@@ -151,7 +151,8 @@ def main(args=None):
         
         # step 2 mixing
         movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
-        move_spiral(rev=3, vel=50, acc=30, rmax=200.0,lmax=0,time=20.0, axis=DR_AXIS_Z, ref=DR_TOOL)
+        # move_spiral(rev=3, vel=50, acc=30, rmax=200.0,lmax=0,time=20.0, axis=DR_AXIS_Z, ref=DR_TOOL)
+        mwait(0.1)
         movej(JStart, vel=VELOCITY, acc=ACC)
 
 
