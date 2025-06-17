@@ -141,7 +141,7 @@ def main(args=None):
                 break         
         release_force(time=0.0)
         release_compliance_ctrl()
-    
+        
     def cement():
         movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
         mwait(0.2)

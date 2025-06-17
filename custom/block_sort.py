@@ -57,50 +57,31 @@ def main(args=None):
         set_digital_output(1, OFF)
 
     def check_and_grab():
-        set_ref_coord(0)
+        set_ref_coord(DR_BASE)
         task_compliance_ctrl()
         set_stiffnessx([3000.0]*3 + [200.0]*3)
         set_desired_force([0.0, 0.0, -30.0, 0.0, 0.0, 0.0], [0, 0, 1, 0, 0, 0])
 
         while True:
-            if check_force_condition(axis=DR_AXIS_Z, max=25):
-                release()
-                print(1)
-                time.sleep(0.2)
-                print(2)
-                z = get_current_posx()[0]
+            if check_force_condition(axis=DR_AXIS_Z, max=20):
                 break
-        print(3)
-        z[2] += 5.0
-        print(4)
-        time.sleep(0.2)
-        print(5)
-        movel(z, vel=150, acc=300, ref=DR_BASE)
-        print(6)
-        grip()  
-        print(7) 
+            
         release_force()
         release_compliance_ctrl()
 
-        if height == 0:
-            print("블럭 없음: 집기 생략")
-            return 0
-
-        # ✅ 측정 직후 살짝 더 내려가서 잡기
+        temp = get_current_posx()[0]
+        temp[2] += 10
+        movel(temp, vel=150, acc=300, ref=DR_BASE)
         release()
-        time.sleep(0.2)
-        print("⬇️ 블럭 위치에서 하강 및 그리퍼 동작")
-        movel(block_to_down, vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
-        time.sleep(0.2)
+        mwait(0.1)
+        temp[2] -= 20
+        movel(temp, vel=150, acc=300, ref=DR_BASE)
+        mwait(0.1)
         grip()
-        time.sleep(0.2)
-
-        # ✅ 다시 위로 복귀
+        mwait(0.1)
         movel(posx(0, 0, 100, 0, 0, 0), vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
-        time.sleep(0.2)
 
-        return height
-
+        return
 
     def place_block(place_pos):
         movel(place_pos, vel=VELOCITY, acc=ACC)
