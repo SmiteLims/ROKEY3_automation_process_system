@@ -209,9 +209,6 @@ def main(args=None):
             print("Error exists!")
             sys.exit()
 
-        progress_2 = 0
-        progress_3 = 0
-
         # REQUESTED BUILDING CONSTRUCTIONS CHECK 
         if buildings == 0:
             print(f"{idx} 단계에 요청받은 건설 의뢰가 존재하지 않아 다음 단계로 넘어갑니다.")
@@ -219,7 +216,7 @@ def main(args=None):
 
         elif buildings == 1 or buildings == 2:
             block_for_construction = block_short if buildings == 1 else block_long
-            print(f"{idx+1}번 위치에 {buildings}타입 4층 탑 건설 시작.")
+            print(f"{idx}번 위치에 {buildings}타입 4층 탑 건설 시작.")
 
 
             # REPEAT UNTIL 4TH FLOOR CONSTRUCTED.
@@ -272,10 +269,10 @@ def main(args=None):
 
         elif buildings == 3:
             # 층별/블록별 건설 설계도
-            blueprint_3 = [[3, 3], [2, 2, 2], [3, 3], [2, 2, 2]]
+            _3type_building = [[3, 3], [2, 2, 2], [3, 3], [2, 2, 2]]
             
             # 한 층씩 건설
-            for floor_level, floor_plan in enumerate(blueprint_3):
+            for fl, floor_plan in enumerate(_3type_building):
                 # 한 층의 블록들을 순서대로 건설
                 for block_idx, block_type in enumerate(floor_plan):
                     
