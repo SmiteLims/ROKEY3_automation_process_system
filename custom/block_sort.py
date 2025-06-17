@@ -64,17 +64,21 @@ def main(args=None):
 
         while True:
             if check_force_condition(axis=DR_AXIS_Z, max=25):
-                z = get_current_posx()[0][2]
-                if z >= 290:
-                    height = 3
-                elif z >= 280:
-                    height = 2
-                elif z >= 270:
-                    height = 1
-                else:
-                    height = 0
+                release()
+                print(1)
+                time.sleep(0.2)
+                print(2)
+                z = get_current_posx()[0]
                 break
-
+        print(3)
+        z[2] += 5.0
+        print(4)
+        time.sleep(0.2)
+        print(5)
+        movel(z, vel=150, acc=300, ref=DR_BASE)
+        print(6)
+        grip()  
+        print(7) 
         release_force()
         release_compliance_ctrl()
 
@@ -98,34 +102,6 @@ def main(args=None):
         return height
 
 
-        while True:
-            if check_force_condition(axis=DR_AXIS_Z, max=25):
-                z = get_current_posx()[0][2]
-                if z >= 290:
-                    height = 3
-                elif z >= 280:
-                    height = 2
-                elif z >= 270:
-                    height = 1
-                else:
-                    height = 0
-                break
-
-        release_force()
-        release_compliance_ctrl()
-
-        if height == 0:
-            print("블럭 없음: 집기 생략")
-            return 0
-
-        release()
-        time.sleep(0.2)
-        movel(block_to_down, vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
-        time.sleep(0.2)
-        grip()
-        time.sleep(0.2)
-        return height
-
     def place_block(place_pos):
         movel(place_pos, vel=VELOCITY, acc=ACC)
         time.sleep(0.2)
@@ -138,6 +114,7 @@ def main(args=None):
     JReady = posj([0.0, 0.0, 90.0, 0.0, 90.0, 0.0])
     movej(JReady, vel=80, acc=80)
     release()
+    grip()
 
     short_blocks, mid_blocks, tall_blocks = [], [], []
 
@@ -146,6 +123,7 @@ def main(args=None):
         print(f"[{idx+1}/9] 감지 위치 이동")
         movel(pos, vel=VELOCITY, acc=ACC, ref=DR_BASE)
         height = check_and_grab()
+
 
         if height == 1:
             short_blocks.append(pos)
