@@ -45,44 +45,51 @@ except ImportError as e:
 ##### 좌표 정의 ####
 
 # 위치 : 홈
-pos_home            =   posj(0      ,0          ,90             ,0      ,90     ,0      )
-height = 100
+pos_home            =   posj(0      ,0          ,90         ,0      ,90     ,0      )
+
+# 높이 값
+height = 120
 
 # 레고 좌표
-# 좌표               =   posx(X      ,Y          ,Z              ,RX     ,RY     ,RZ     )
-block_short         =   posx(299.07 ,89.08      ,41+height   ,13.84  ,180    ,105.56 )
-block_long          =   posx(299.51 ,14.82      ,41+height   ,9.72   ,180    ,101.8  )
+# 좌표               =   posx(X      ,Y          ,Z          ,RX     ,RY     ,RZ     )
+block_short         =   posx(299.07 ,89.08      ,41+height  ,13.84  ,180    ,105.56 )
+block_long          =   posx(299.51 ,14.82      ,41+height  ,9.72   ,180    ,101.8  )
 
-# 위치 : 행 1, 열 1 (1)
-step_1              =   posx(401.43 ,114.9      ,36.12+height   ,69     ,179.97 ,68.92  )
-# 위치 : 행 1, 열 2 (2)
-step_2              =   posx(480.75 ,114.37     ,34.9+height    ,3.87   ,180    ,4.17   )
-# 위치 : 행 1, 열 3 (3)
-step_3              =   posx(561.21 ,113.93     ,34.97+height   ,10.35,180, 10.71)
+# 위치 : 행 1, 열 1 (#1)
+step_1              =   posx(401.43 ,114.9      ,35+height  ,69     ,180    ,68.92  )
+# 위치 : 행 1, 열 2 (#2)
+step_2              =   posx(480.75 ,114.37     ,35+height  ,3.87   ,180    ,4.17   )
+# 위치 : 행 1, 열 3 (#3)
+step_3              =   posx(561.21 ,113.93     ,35+height  ,10.35  ,180    ,10.71  )
 
-# 위치 : 행 2, 열 1 (4)
-step_4              =   posx(400.75 ,2.88       ,34.68+height, 178.8, 180, 179.27)
-# 위치 : 행 2, 열 2 (5)
-step_5              =   posx(480.54 ,2.21       ,34.63+height, 17.65, -180, 18.13) 
-# 위치 : 행 2, 열 3 (6)
-step_6              =   posx(560.57 ,1.85       ,35.43+height, 169.21, -180, 169.69)
+# 위치 : 행 2, 열 1 (#4)
+step_4              =   posx(400.75 ,2.88       ,35+height  ,178.8  ,180    ,179.27 )
+# 위치 : 행 2, 열 2 (#5)
+step_5              =   posx(480.54 ,2.21       ,35+height  ,17.65  ,180    ,18.13  ) 
+# 위치 : 행 2, 열 3 (#6)
+step_6              =   posx(560.57 ,1.85       ,35+height  ,169.21 ,180    ,169.69 )
 
-# 위치 : 행 3, 열 1 (7)
-step_7              =   posx(399.66 ,-108.28    ,36.19+height, 160.73, -180, 161.28)
-# 위치 : 행 3, 열 2 (8)
-step_8              =   posx(479.99 ,-108.84    ,33.95+height, 167.52, -180, 167.91)
-# 위치 : 행 3, 열 3 (9)
-step_9              =   posx(559.68 ,-109.54    ,34.8+height, 146.96, -180, 147.18)
+# 위치 : 행 3, 열 1 (#7)
+step_7              =   posx(399.66 ,-108.28    ,35+height  ,160.73 ,180    ,161.28 )
+# 위치 : 행 3, 열 2 (#8)
+step_8              =   posx(479.99 ,-108.84    ,35+height  ,167.52 ,180    ,167.91 )
+# 위치 : 행 3, 열 3 (#9)
+step_9              =   posx(559.68 ,-109.54    ,35+height  ,146.96 ,180    ,147.18 )
 
 
 # Z값 100으로 내려가는 값 (레고블럭 잡기용/상대좌표)
-block_to_down       =   posx(0      ,0          ,-height        ,0      ,0      ,0      )
+block_to_down       =   posx(0      ,0          ,-height    ,0      ,0      ,0      )
 # Z값 30으로 올라가는 값 (Force로 레고블럭 누르기 이전에 사용/상대좌표)
-block_for_spread    =   posx(0      ,0          ,30             ,0      ,0      ,0      )
+block_for_spread    =   posx(0      ,0          ,30         ,0      ,0      ,0      )
 # 레고길이 값 (building 3 전용/상대좌표)
-offset_for_short    =   posx(0     ,-31.9        ,0              ,0      ,0      ,0      )
-offset_for_long     =   posx(0     ,-47.7        ,0              ,0      ,0      ,0      )
+offset_for_short    =   posx(0     ,-31.9        ,0         ,0      ,0      ,0      )
+offset_for_long     =   posx(0     ,-47.7        ,0         ,0      ,0      ,0      )
 
+# 변수
+# block_for_construction : 잡을 레고 위치 (+height)
+# block_to_place : 레고 건축 위치 좌표
+# relative_offset : 건축물 type 3용 상대좌표
+# block_for_spread : 레고 조립 완벽 장착용
 
 
 # Function Definition
