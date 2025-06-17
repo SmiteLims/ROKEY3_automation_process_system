@@ -61,6 +61,7 @@ def main(args=None):
         set_digital_output(1, OFF)
 
     def check_and_grab():
+        global i_short, i_mid, i_long
         set_ref_coord(0)
         task_compliance_ctrl()
         set_stiffnessx([3000.0]*3 + [200.0]*3)
@@ -69,6 +70,7 @@ def main(args=None):
         while True:
             if check_force_condition(axis=DR_AXIS_Z, max=25):
                 release()
+                global i_short, i_mid, i_long
                 print(1)
                 time.sleep(0.2)
                 print(2)
@@ -97,7 +99,7 @@ def main(args=None):
         time.sleep(0.2)
 
         if height == 0:
-            movel(short_pallets[i_short], vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            movel(short_pallets[i_short], vel=VELOCITY, acc=ACC, ref=DR_BASE)
             task_compliance_ctrl()
             z[2] -= 15.0
             time.sleep(0.2)
@@ -110,7 +112,7 @@ def main(args=None):
             time.sleep(0.2)
             i_short +=1
         elif height == 1:
-            movel(mid_pallets[i_mid], vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            movel(mid_pallets[i_mid], vel=VELOCITY, acc=ACC, ref=DR_BASE)
             task_compliance_ctrl()
             z[2] -= 15.0
             time.sleep(0.2)
@@ -123,7 +125,7 @@ def main(args=None):
             time.sleep(0.2)
             i_mid +=1
         elif height == 2:
-            movel(tall_pallets[i_long], vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+            movel(tall_pallets[i_long], vel=VELOCITY, acc=ACC, ref=DR_BASE)
             task_compliance_ctrl()
             z[2] -= 15.0
             time.sleep(0.2)
