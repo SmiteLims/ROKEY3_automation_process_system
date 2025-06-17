@@ -101,6 +101,7 @@ def main(args=None):
         if height == 0:
             movel(short_pallets[i_short], vel=VELOCITY, acc=ACC, ref=DR_BASE)
             task_compliance_ctrl()
+            z = get_current_posx()[0]
             z[2] -= 15.0
             time.sleep(0.2)
             movel(z, vel=150, acc=300, ref=DR_BASE)
@@ -117,6 +118,7 @@ def main(args=None):
         elif height == 1:
             movel(mid_pallets[i_mid], vel=VELOCITY, acc=ACC, ref=DR_BASE)
             task_compliance_ctrl()
+            z = get_current_posx()[0]
             z[2] -= 15.0
             time.sleep(0.2)
             movel(z, vel=150, acc=300, ref=DR_BASE)
@@ -131,6 +133,7 @@ def main(args=None):
         elif height == 2:
             movel(tall_pallets[i_long], vel=VELOCITY, acc=ACC, ref=DR_BASE)
             task_compliance_ctrl()
+            z = get_current_posx()[0]
             z[2] -= 15.0
             time.sleep(0.2)
             movel(z, vel=150, acc=300, ref=DR_BASE)
