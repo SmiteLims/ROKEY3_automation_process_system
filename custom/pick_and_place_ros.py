@@ -78,7 +78,7 @@ def main(args=None):
         # 긴거: 3, 중간거: 2, 짧은거: 1, 없는거 0 
         while True:
             if check_force_condition(axis=DR_AXIS_Z, max=25):
-                current_pos = get_current_posx()[0]
+                current_pos, _ = get_current_posx()
                 if current_pos[2] >= 290:
                     status_lst.append(3)
                 elif current_pos[2] >= 280:
@@ -104,7 +104,7 @@ def main(args=None):
         release_force()
         release_compliance_ctrl()
 
-        temp = get_current_posx()[0]
+        temp, _ = get_current_posx()
         temp[2] += 10
         movel(temp, vel=150, acc=300, ref=DR_BASE)
         release()
@@ -163,28 +163,30 @@ def main(args=None):
 
     if input("Sorting is starting. Please type in 'start'!") == "start":
         print("Start")
-
-    for status, pos in zip(status_lst,position_lst):
-        movel(pos, vel=150, acc=300, ref=DR_BASE)
-        check_and_grab()
-        
-        if status == 0:
-            continue
-        elif status == 1:
-            movel(short_pallets[short_idx], vel=150, acc=300, ref=DR_BASE)
-            place_block()
-            short_idx += 1
-        elif status == 2:
-            movel(mid_pallets[mid_idx], vel=150, acc=300, ref=DR_BASE)
-            place_block()
-            mid_idx += 1
-        elif status == 3:
-            movel(tall_pallets[tall_idx], vel=150, acc=300, ref=DR_BASE)
-            place_block()
-            tall_idx += 1
-        else:
-            print("Error")
-            sys.exit()
+    if len(status_lst) != len(position_lst):
+        print("TEST")
+    else:
+        for status, pos in zip(status_lst,position_lst):
+            movel(pos, vel=150, acc=300, ref=DR_BASE)
+            check_and_grab()
+            
+            if status == 0:
+                continue
+            elif status == 1:
+                movel(short_pallets[short_idx], vel=150, acc=300, ref=DR_BASE)
+                place_block()
+                short_idx += 1
+            elif status == 2:
+                movel(mid_pallets[mid_idx], vel=150, acc=300, ref=DR_BASE)
+                place_block()
+                mid_idx += 1
+            elif status == 3:
+                movel(tall_pallets[tall_idx], vel=150, acc=300, ref=DR_BASE)
+                place_block()
+                tall_idx += 1
+            else:
+                print("Error")
+                sys.exit()
         
     rclpy.shutdown()
 
