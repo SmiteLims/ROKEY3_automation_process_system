@@ -81,6 +81,7 @@ def main(args=None):
             set_tcp,
             movej,
             movel,
+            movesx,
             amove_periodic,
             move_spiral,
             set_digital_output,
@@ -99,7 +100,8 @@ def main(args=None):
             DR_FC_MOD_REL,
             DR_AXIS_Z,
             DR_BASE,
-            DR_TOOL
+            DR_TOOL,
+            DR_MVS_VEL_CONST
         )
 
         from DR_common2 import posx, posj
@@ -110,12 +112,23 @@ def main(args=None):
     
     
     JReady = posj([0, 0, 90, 0, 90, 0])
+    JStart = posj([45.86,35.85,78.57,-34.90,105.14,48.98])
     example_amp = [150.0, 0, 0.0, 0.0, 0.0, 30.0]
-    cup_up = posx(468.11, 240.77, 375.27, 166.06, -179.88, 142.05)
-    cup_down = posx(467.59, 243.72, 302.02, 45.37, -179.7, 21.17)
-    target_point1 = posx(398.74, 169.38, 309.46, 89.43, -128.43, -90.38) 
-    target_point2 = posx(487.05, 173.94, 295.53, 89.61, -128.46, -90.41) 
-    target_point3 = posx(566.14, 128.39, 282.95, 89.11, -128.23, -91)
+    cup_up = posx(457.41, 268.36, 196.67, 104.04, 179.98, 103.65)
+    cup_down = posx(456.61, 267.81, 73.48, 16.53, -179.87, 16.16)
+    # target_point1 = posx(398.74, 169.38, 309.46, 89.43, -128.43, -90.38) 
+    # target_point2 = posx(487.05, 173.94, 295.53, 89.61, -128.46, -90.41) 
+    # target_point3 = posx(566.14, 128.39, 282.95, 89.11, -128.23, -91)
+    xlist = [posx(395.87, 144.91, 100.93, 90.38, -127.98, 90),
+             posx(395.87, -183.79, 100.93, 90.38, -127.98, 90),
+             posx(415.86, -224.88, 100.92, 90.38, -127.98, 90),
+             posx(448.35, -224.89, 100.92, 90.38, -127.98, 90),
+             posx(474.69, -178.35, 100.93, 90.38, -127.98, 90),
+             posx(474.68, 136.46, 100.93, 90.38, -127.98, 90),
+             posx(516.84, 162.17, 100.93, 90.39, -127.98, 90),
+             posx(557.77, 124.13, 100.92, 90.39, -127.98, 90),
+             posx(557.78, -193.65, 100.93, 90.39, -127.98, 90)
+             ]
 
     def grip():
         set_digital_output(1,ON)
@@ -127,32 +140,36 @@ def main(args=None):
     
     def cement():
         # step 1 truck move
-        movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
+        movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로 이동
         mwait(0.1)
-        movel(cup_down, vel = VELOCITY, acc = ACC) # 내려가기
+        movel(cup_down, vel = VELOCITY, acc = ACC) # 컵 아래로 이동
         mwait(0.1)
-        grip()
+        grip() # 잡은 후 
         mwait(0.1)
         movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
 
+        
         # step 2 mixing
         movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
-        move_spiral(rev=3,vel=50, acc=30, rmax=20.0,lmax=0,time=20.0,axis=DR_AXIS_Z,ref=DR_TOOL)
-        movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
+        move_spiral(rev=3, vel=50, acc=30, rmax=200.0,lmax=0,time=20.0, axis=DR_AXIS_Z, ref=DR_TOOL)
+        movej(JStart, vel=VELOCITY, acc=ACC)
 
 
         # step 3 pavement
-        movel(target_point1, vel = VELOCITY, acc = ACC) # target_point
-        amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
-        mwait(5)
+        movesx(xlist,vel=[100,30],acc=[200,60],vel_opt=DR_MVS_VEL_CONST)
+        mwait(0.1)
 
-        movel(target_point2, vel = VELOCITY, acc = ACC) # target_point
-        amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
-        mwait(5)
+        # movel(target_point1, vel = VELOCITY, acc = ACC) # target_point
+        # amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
+        # mwait(5)
 
-        movel(target_point3, vel = VELOCITY, acc = ACC) # target_point
-        amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
-        mwait(5)
+        # movel(target_point2, vel = VELOCITY, acc = ACC) # target_point
+        # amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
+        # mwait(5)
+
+        # movel(target_point3, vel = VELOCITY, acc = ACC) # target_point
+        # amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=3, ref=DR_TOOL) # 흔들기
+        # mwait(5)
 
         # step 4 organization
         movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
