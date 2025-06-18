@@ -174,7 +174,7 @@ def main(args=None):
                     # Force 설정
                     task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
                     time.sleep(1)
-                    set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                    set_desired_force(fd=[0, 0, -FIRST, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                     time.sleep(1)
                     force_condition = check_force_condition(DR_AXIS_Z, max=FIRST)
 
@@ -239,7 +239,7 @@ def main(args=None):
 
                         task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
                         time.sleep(1)
-                        set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                        set_desired_force(fd=[0, 0, -FIRST, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                         time.sleep(1)
                         force_condition = check_force_condition(DR_AXIS_Z, max=FIRST)
 
