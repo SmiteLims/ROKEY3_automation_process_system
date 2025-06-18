@@ -11,6 +11,8 @@ ROBOT_ID = "dsr01"
 ROBOT_MODEL = "m0609"
 VELOCITY, ACC = 60, 60
 ON, OFF = 1, 0
+# 힘제어 변수, FIRST는 처음 블럭 장착할 때, SECOND는 장착 확인용
+FIRST, SECOND = 30, 50
 
 # Initialize DR_init with robot parameters
 DR_init.__dsr__id = ROBOT_ID
@@ -160,7 +162,7 @@ def release():
 def check_bar(idx):
     task_compliance_ctrl()
     set_stiffnessx([3000.00, 3000.00, 3000.00, 200.00, 200.00, 200.00],time=0.0)
-    set_desired_force([0.00, 0.00, -30.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0)
+    set_desired_force([0.00, 0.00, -50.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0)
     # 긴거: 3, 중간거: 2, 짧은거: 1, 없는거 0 
     while True:
         if check_force_condition(axis=DR_AXIS_Z, max=25):
@@ -246,7 +248,7 @@ def main(args=None):
                     # 팔레트 위치 측정
                     check_bar(idx)
                     movel(position_lst[idx], vel=150, acc=300, ref=DR_BASE)
-                    with open('/home/rokey/ros_ws/building_text/blue_print.txt', 'w', encoding='utf-8') as file:
+                    with open('/home/rokey/ros_ws/building_text/blue_print_index.txt', 'w', encoding='utf-8') as file:
                         file.write(str(idx+1))
                     with open('/home/rokey/ros_ws/building_text/build_list.txt', 'w', encoding='utf-8') as file:
                         file.write(str(build_list))    
@@ -257,13 +259,16 @@ def main(args=None):
             print(build_list)
         
         time.sleep(1)
-        print('토목공사 시작')
-        cement()
-        print('토목공사 완료')
-        time.sleep(1)
+        if construct_index > 0:
+            pass
+        else:
+            print('토목공사 시작')
+            cement()
+            print('토목공사 완료')
+            time.sleep(1)
         print('건설 시작')
 
-        if i >= 9:
+        if construct_index >= 9:
             print('건설 완료')
             with open('/home/rokey/ros_ws/building_text/blue_print_index.txt', 'w', encoding='utf-8') as file:
                 file.write(str(0))
@@ -301,6 +306,8 @@ def main(args=None):
                 # 팔레트 높이로 체크한 빌딩 단계 체크
                 if build_list[idx] == 0:
                     print(f"{idx} 단계에 요청받은 건설 의뢰가 존재하지 않아 다음 단계로 넘어갑니다.")
+                    with open('/home/rokey/ros_ws/building_text/construct_index.txt', 'w', encoding='utf-8') as file:
+                       file.write(str(idx))   
                     continue
 
                 elif build_list[idx] == 1 or build_list[idx] == 2:
@@ -346,7 +353,7 @@ def main(args=None):
 
                             # 2. 비정상 블록 감지: [0,0,1]
                             elif [di1, di2, di3] == [0,0,1]:
-                                movej(dummy, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                                movej(dummy, vel=VELOCITY, acc=ACC)
                                 release()
                                 user_input = input("⚠️ 비정상 블록 감지됨. 다시 시도하려면 'start' 입력: ")
                                 if user_input == "start":
@@ -370,6 +377,7 @@ def main(args=None):
                                 print(f"⚠️ 측정중")
                                 time.sleep(3)  # 잠시 대기 후 다시 측정
                                 continue
+                        #######################################################################################
                         movel(block_for_construction, vel = VELOCITY, acc = ACC)
                         print("33")
                         mwait(0.5)
@@ -385,11 +393,11 @@ def main(args=None):
                         set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                         print("166666")
                         time.sleep(1)
-                        force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                        force_condition = check_force_condition(DR_AXIS_Z, max=FIRST)
                         print("77777")
 
                         while (force_condition == 0): # 힘 제어로 블럭 놓기
-                            force_condition = check_force_condition(DR_AXIS_Z, max=50) # 조건 만족하면 0 (ROS2에서)
+                            force_condition = check_force_condition(DR_AXIS_Z, max=SECOND) # 조건 만족하면 0 (ROS2에서)
                         print("18888")
 
                         release_force()
@@ -415,11 +423,14 @@ def main(args=None):
                         movel(block_to_place, vel = VELOCITY, acc = ACC)
                         mwait(0.2)
                         release()
+                    with open('/home/rokey/ros_ws/building_text/construct_index.txt', 'w', encoding='utf-8') as file:
+                       file.write(str(idx))   
+                    print(f"{idx} 단계 완료, 다음 단계로 넘어갑니다.")
 
 
-                elif buildings == 3:
+                elif build_list[idx] == 3:
                     # 층별/블록별 건설 설계도
-                    print(f"{idx}번 위치에 {buildings}타입 4층 탑 건설 시작.")
+                    print(f"{idx}번 위치에 {build_list[idx]}타입 4층 탑 건설 시작.")
                     _3type_building = [[3, 3], [2, 2, 2], [3, 3], [2, 2, 2]]
                     
                     # 한 층씩 건설
@@ -438,11 +449,12 @@ def main(args=None):
                             mwait(0.5)
                             grip()
                             mwait(0.5)
+                            ##################################################################################
                             while True:
                                 di1 = get_digital_input(1)
                                 di2 = get_digital_input(2)
                                 di3 = get_digital_input(3)
-                                print(f'{floor+1}층 진행중')
+                                print(f'{fl+1}층 진행중')
                                 # 1. 그립 실패: [0,1,0]
                                 if [di1, di2, di3] == [1,0,0]:
                                     release()
@@ -460,7 +472,7 @@ def main(args=None):
 
                                 # 2. 비정상 블록 감지: [0,0,1]
                                 elif [di1, di2, di3] == [0,0,1]:
-                                    movej(dummy, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                                    movej(dummy, vel=VELOCITY, acc=ACC)
                                     release()
                                     user_input = input("⚠️ 비정상 블록 감지됨. 다시 시도하려면 'start' 입력: ")
                                     if user_input == "start":
@@ -473,6 +485,18 @@ def main(args=None):
                                     else:
                                         print("⛔ 사용자 중단")
                                         break
+
+                                # 3. 정상 블록 감지: [0,1,1]
+                                elif [di1, di2, di3] == [0,1,1]:
+                                    print("✅ 정상 블록 감지 완료!")
+                                    break
+
+                                # 4. 예외 처리: 예상치 못한 조합
+                                else:
+                                    print(f"⚠️ 측정중")
+                                    time.sleep(3)  # 잠시 대기 후 다시 측정
+                                    continue
+                            #######################################################################################
                             movel(block_for_construction, vel=VELOCITY, acc=ACC)
                             mwait(0.5)
 
@@ -488,9 +512,9 @@ def main(args=None):
                             time.sleep(1)
                             set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                             time.sleep(1)
-                            force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                            force_condition = check_force_condition(DR_AXIS_Z, max=FIRST)
                             while (force_condition == 0):
-                                force_condition = check_force_condition(DR_AXIS_Z, max=50)
+                                force_condition = check_force_condition(DR_AXIS_Z, max=SECOND)
                             release_force()
                             release_compliance_ctrl()
                             release()
@@ -512,9 +536,10 @@ def main(args=None):
                             movel(final_placement_pose, vel=VELOCITY, acc=ACC)
                             mwait(0.2)
                             release()
-
-                print(f"{idx} 단계 완료, 다음 단계로 넘어갑니다.")
-    
+                    with open('/home/rokey/ros_ws/building_text/construct_index.txt', 'w', encoding='utf-8') as file:
+                       file.write(str(idx))   
+                    print(f"{idx} 단계 완료, 다음 단계로 넘어갑니다.")
+            print('건축 완료')
 
     rclpy.shutdown()
 if __name__ == "__main__":
