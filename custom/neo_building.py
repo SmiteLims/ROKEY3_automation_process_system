@@ -1,278 +1,437 @@
+# Brik Assemble @20250515
+# construction_step2_Jay
 import rclpy
 import DR_init
 import time
-from copy import deepcopy
-from DR_common2 import posx
 import sys
 import ast
 
-# for single robot
+# Configuration for a single robot
 ROBOT_ID = "dsr01"
 ROBOT_MODEL = "m0609"
-VELOCITY, ACC = 30, 30
+VELOCITY, ACC = 60, 60
+ON, OFF = 1, 0
 
+# Initialize DR_init with robot parameters
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
 
-ON, OFF = 1, 0
+rclpy.init()
+node = rclpy.create_node("brick_assemble_node", namespace=ROBOT_ID)
+DR_init.__dsr__node = node
 
-# 좌표정의
+# DSR API import
+try:
+    from DSR_ROBOT2 import (
+        get_digital_input, set_digital_output,
+        get_current_posx, trans,set_ref_coord,
+        set_tool, set_tcp,
+        movej, movel, set_stiffnessx,amove_periodic, 
+        wait, mwait,
+        task_compliance_ctrl, release_compliance_ctrl,
+        set_desired_force, release_force, check_force_condition,
+        DR_BASE,DR_MVS_VEL_CONST, DR_TOOL,
+        DR_FC_MOD_REL,
+        DR_AXIS_Z,
+        DR_MV_MOD_REL)
+    
+    from DR_common2 import posx, posj
 
-nocontact_z = 350.0
-blueprint_xy1 = posx(198.21,-58.48,nocontact_z,147.25,-179.99,145.78)
-blueprint_xy2 = posx(249.95,-52.92,nocontact_z,11.30,-179.55,9.85)
-blueprint_xy3 = posx(303.75,-50.58,nocontact_z,3.91,-179.05,2.20)
-blueprint_xy4 = posx(204.68,-107.52,nocontact_z,6.47,-178.94,4.53)
-blueprint_xy5 = posx(257.29,-105.63,nocontact_z,3.56,-178.59,1.44)
-blueprint_xy6 = posx(311.57,-102.36,nocontact_z,179.50,177.77,176.98)
-blueprint_xy7 = posx(214.47,-159.75,nocontact_z,171.63,177.15,169.30)
-blueprint_xy8 = posx(267.19,-156.88,nocontact_z,173.03,176.69,170.36)
-blueprint_xy9 = posx(320.45,-155.79,nocontact_z,174.63,176.23,171.84)
-position_lst = [blueprint_xy1,
-                        blueprint_xy2,
-                        blueprint_xy3,
-                        blueprint_xy4,
-                        blueprint_xy5,
-                        blueprint_xy6,
-                        blueprint_xy7,
-                        blueprint_xy8,
-                        blueprint_xy9]
-
-
-# location : lego
-block_short = posx(379.32, 192.52, 233.65+100, 98.77, 179.74, 65.97)
-block_long = posx(294.65, 15.92, 271.62+100, 112.58, -180, 24.53)
-
-# location : row 1, column 1 (1)
-step_1 = posx(402.29, 109.11, nocontact_z, 11.76, -180, -169.14)
-# location : row 1, column 2 (2)
-step_2 = posx(481.74, 108.88, nocontact_z, 21.18, 180, -159.4)
-# location : row 1, column 3 (3)
-step_3 = posx(562.35, 106.4, nocontact_z, 8.67, -179.99, -171.79)
-
-# location : row 2, column 1 (4)
-step_4 = posx(401.63, -1.98, nocontact_z, 10.15, 180, -170.17)
-# location : row 2, column 2 (5)
-step_5 = posx(481.21, -3.48, nocontact_z, 10.73, -179.99, -169.53)
-# location : row 2, column 3 (6)
-step_6 = posx(559.87, -4.97, nocontact_z, 11.31, 180, -168.84)
-
-# location : row 3, column 1 (7)
-step_7 = posx(400.03, -113.39, nocontact_z, 95.99, -180, -83.73)
-# location : row 3, column 2 (8)
-step_8 = posx(479.09, -115.1, nocontact_z, 155.72, -179.95, -24.07)
-# location : row 3, column 3 (9)
-step_9 = posx(558.16, -115.92, nocontact_z, 158.13, -179.89, -22.01)
-# difference
-# Just to go up
-block_to_down = posx(0,0,-100,0,0,0)
-
-
+except ImportError as e:
+    print(f"Error importing DSR_ROBOT2 : {e}")
+    exit()
 
 with open('/home/rokey/ros_ws/building_text/build_list.txt', 'r', encoding='utf-8') as file:
     build_list_str = file.read()
     build_list = ast.literal_eval(build_list_str)
 
-    print(f'저장된 설계도 리스트{build_list}')
+    print(f'현재 설계도면: {build_list}')
 
 with open('/home/rokey/ros_ws/building_text/blue_print.txt', 'r', encoding='utf-8') as file:
     i = int(file.read())
-    print(f"설계도 진행 상황{i}")
+    print(f'측정중인 공간: {i}')
+# Global variable
+##### 좌표 정의 ####
+######### 설계도면 좌표 ##########
+blueprint_xy1 = posx(194.38, -60.5, 150.0, 152.35, 180, 143.21)     #0
+blueprint_xy2 = posx(244.83, -53.04, 150.0, 166.55, 180, 157.29)    #1
+blueprint_xy3 = posx(295.89, -45.59, 150.0, 161, -180, 151.96)      #2
+blueprint_xy4 = posx(201.67, -111.3, 150.0, 144.15, 180, 135.19)    #3
+blueprint_xy5 = posx(252.36, -103.68, 150.0, 141.41, -180, 132.02)  #4
+blueprint_xy6 = posx(302.79, -95.66, 150.0, 165.55, 180, 155.94)    #5
+blueprint_xy7 = posx(209.64, -161.45, 150.0, 139.01, 180, 129.42)   #6
+blueprint_xy8 = posx(259.82, -154.17, 150.0, 153.75, 179.96, 144)   #7
+blueprint_xy9 = posx(310.27, -146.5, 150.0, 20.05, -179.96, 10.52)  #8
+position_lst = [blueprint_xy1, blueprint_xy2, blueprint_xy3,
+                blueprint_xy4, blueprint_xy5, blueprint_xy6,
+                blueprint_xy7, blueprint_xy8, blueprint_xy9]
+######### 건설좌표 ##########
+# 위치 : 홈
+pos_home            =   posj(0      ,0          ,90         ,0      ,90     ,0      )
 
-with open('/home/rokey/ros_ws/building_text/construct_index.txt', 'r', encoding='utf-8') as file:
-    index = int(file.read())
-    print(f'건축 진행 상황{index}')
+# 높이 값
+height = 250
+
+# 레고 좌표
+# 좌표               =   posx(X      ,Y          ,Z          ,RX     ,RY     ,RZ     )
+block_short         =   posx(299.07, 89.08, 40.93+100, 13.84, 180, 105.56)
+block_long          =   posx(299.51, 14.82, 41.22+100, 9.72, 180, 101.8)
+
+# 위치 : 행 1, 열 1 (#1)
+step_1              =   posx(401.43, 114.9, 136.12, 69, 179.97, 68.92)
+# 위치 : 행 1, 열 2 (#2)
+step_2              =   posx(480.75, 114.37, 134.9, 3.87, 180, 4.17)
+# 위치 : 행 1, 열 3 (#3)
+step_3              =   posx(561.21, 113.93, 134.97, 10.35, 180, 10.71)
+# 위치 : 행 2, 열 1 (#4)
+step_4              =   posx(400.75, 2.88, 134.68, 178.8, 180, 179.27)
+# 위치 : 행 2, 열 2 (#5)
+step_5              =   posx(480.54, 2.21, 134.63, 17.65, -180, 18.13)
+# 위치 : 행 2, 열 3 (#6)
+step_6              =   posx(560.57, 1.85, 135.43, 169.21, -180, 169.69) #5
+
+# 위치 : 행 3, 열 1 (#7)
+step_7              =   posx(399.66, -108.28, 136.19, 160.73, -180, 161.28)  #6
+# 위치 : 행 3, 열 2 (#8)
+step_8              =   posx(479.99, -108.84, 133.95, 167.52, -180, 167.91)  #7
+# 위치 : 행 3, 열 3 (#9)
+step_9              =  posx(559.68, -109.54, 134.8, 146.96, -180, 147.18)   #8
+
+
+# Z값 100으로 내려가는 값 (레고블럭 잡기용/상대좌표)
+block_to_down       =   posx(0      ,0          ,-100    ,0      ,0      ,0      )
+# Z값 30으로 올라가는 값 (Force로 레고블럭 누르기 이전에 사용/상대좌표)
+block_for_spread    =   posx(0      ,0          ,30         ,0      ,0      ,0      )
+# 레고길이 값 (building 3 전용/상대좌표)
+offset_for_short    =   posx(0     ,-31.9        ,0         ,0      ,0      ,0      )
+offset_for_long     =   posx(0     ,-47.7        ,0         ,0      ,0      ,0      )
+
+# 변수
+# block_for_construction : 잡을 레고 위치 (+height)
+# block_to_place : 레고 건축 위치 좌표
+# relative_offset : 건축물 type 3용 상대좌표
+# block_for_spread : 레고 조립 완벽 장착용
+
+
+# Function Definition
+def grip():
+    set_digital_output(1, 1)
+    set_digital_output(2, 0)
+    time.sleep(0.5)
+  
+       
+def release():
+    set_digital_output(1, 0)
+    set_digital_output(2, 1)
+    time.sleep(0.5)
+
+def check_bar(idx):
+    task_compliance_ctrl()
+    set_stiffnessx([3000.00, 3000.00, 3000.00, 200.00, 200.00, 200.00],time=0.0)
+    set_desired_force([0.00, 0.00, -30.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0)
+    # 긴거: 3, 중간거: 2, 짧은거: 1, 없는거 0 
+    while True:
+        if check_force_condition(axis=DR_AXIS_Z, max=25):
+            x = get_current_posx()[0]
+            print(f'측정위치 : {x}')
+            if x[2] >= 64:
+                build_list[idx] = 3
+            elif x[2] >= 54:
+                build_list[idx] = 2
+            elif x[2] >= 44:
+                build_list[idx] = 1
+            else:
+                build_list[idx] = 0
+            break         
+    release_force(time=0.0)
+    release_compliance_ctrl()
+
+def cement():
+    # step 1 truck move
+    set_ref_coord(DR_BASE) 
+    movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로 이동
+    mwait(0.1)
+    release()
+    mwait(0.1)
+    movel(cup_down, vel = VELOCITY, acc = ACC) # 컵 아래로 이동
+    mwait(0.1)
+    grip() # 잡은 후 
+    mwait(0.1)
+    movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
+
+    
+    # step 2 mixing
+    movej(JReady, vel=VELOCITY, acc=ACC) # 섞는 위치 이동하기
+    amove_periodic(amp=example_amp,period=3.0, atime=0.02, repeat=2, ref=DR_TOOL) # 흔들기
+    mwait(0.1)
+    # movej(JStart, vel=VELOCITY, acc=ACC)
+
+
+    # step 3 pavement
+    movesx(xlist,vel=[100,30],acc=[200,60],vel_opt=DR_MVS_VEL_CONST)
+    mwait(0.1)
+
+    # step 4 organization
+    movel(cup_up, vel = VELOCITY, acc = ACC) # 컵 위로
+    mwait(0.1)
+    movel(cup_down, vel = VELOCITY, acc = ACC) # 내려가기
+    mwait(0.1)
+    release()
+    mwait(0.1)
+    movel(cup_up, vel = VELOCITY, acc = ACC)
+    mwait(0.1)
 
 
 def main(args=None):
-    rclpy.init(args=args)
-    node = rclpy.create_node("rokey_move", namespace=ROBOT_ID)
 
-    DR_init.__dsr__node = node
-    # DRL 라이브러리 import
-    try:
-        from DSR_ROBOT2 import (
-            set_tool,
-            set_tcp,
-            movej,
-            movel,
-            set_digital_output,
-            get_digital_input,
-            get_current_posx,
-            trans,
-            set_ref_coord,
-            task_compliance_ctrl,
-            set_stiffnessx,
-            set_desired_force,
-            release_force,
-            release_compliance_ctrl,
-            check_force_condition,
-            mwait,
-            DR_MV_MOD_REL,
-            DR_FC_MOD_REL,
-            DR_AXIS_Z,
-            DR_BASE
-        )
-
-        from DR_common2 import posx, posj
-
-    except ImportError as e:
-        print(f"Error importing DSR_ROBOT2 : {e}")
-        return
-    
-    def grip():
-        set_digital_output(1,ON)
-        set_digital_output(2,OFF)
-
-    def release():
-        set_digital_output(2,ON)
-        set_digital_output(1,OFF)
-
-    def check_bar():
-        set_ref_coord(0)
-        task_compliance_ctrl()
-        set_stiffnessx([3000.00, 3000.00, 3000.00, 200.00, 200.00, 200.00],time=0.0)
-        set_desired_force([0.00, 0.00, -30.00, 0.00, 0.00, 0.00],[0,0,1,0,0,0],time=0.0)
-        # 긴거: 3, 중간거: 2, 짧은거: 1, 없는거 0 
-        while True:
-            if check_force_condition(axis=DR_AXIS_Z, max=25):
-                x = get_current_posx()[0]
-                print('측정 좌표 ',x)
-                if x[2] >= 290:
-                    build_list.append(3)
-                elif x[2] >= 280:
-                    build_list.append(2)
-                elif x[2] >= 270:
-                    build_list.append(1)
-                else:
-                    build_list.append(0)
-                break         
-        release_force(time=0.0)
-        release_compliance_ctrl()
-    
     set_tool("Tool Weight_2FG")
     set_tcp("2FG_TCP")
-    
-    # 포즈 생성
-    JReady = posj([0.0, 0.0, 90.0, 0.0, 90.0, 0.0])
-    # 로봇 위치 초기화
-    release()
-    movej(JReady, vel = 80, acc = 80)
-    grip()
-     # 시작
-    print('측정 시작')
-    if i >= 9:
-        print('설계완료')
-        print(build_list)
-    else:
-        for idx in range(i, len(position_lst)):
+
+    if rclpy.ok():
+
+        movej(pos_home, vel = 80, acc = 80)
+        release()
+        mwait(0.1)
+        grip()
+        mwait(0.2)
+        print('초기위치 설정 완료')
+        
+        # 시작
+        print('측정 시작')
+        if i >= 9:
+            print('이미 모든 위치 측정 완료')
+            print(build_list)
+        else:
+            for idx in range(i, len(position_lst)):
+                
+                try:
+                    print(f'{idx}위치 측정 시작')
+                    movel(position_lst[idx], vel=150, acc=300, ref=DR_BASE)
+                    # 팔레트 위치 측정
+                    check_bar(idx)
+                    movel(position_lst[idx], vel=150, acc=300, ref=DR_BASE)
+                    with open('/home/rokey/ros_ws/building_text/blue_print.txt', 'w', encoding='utf-8') as file:
+                        file.write(str(idx+1))
+                    with open('/home/rokey/ros_ws/building_text/build_list.txt', 'w', encoding='utf-8') as file:
+                        file.write(str(build_list))    
+                except Exception as e:
+                    print(f"[ERROR] {idx} 위치 이동 실패: {e}")
+            # 측정 결과 출력
+            print('측정 완료')
+            print(build_list)
+        
+        for idx,buildings in enumerate(build_list):
             
-            print(f"Moving to approach pose: {idx}")
-            movel(position_lst[idx], vel=150, acc=300, ref=DR_BASE)
-            # 팔레트 위치 측정
-            check_bar()
-            movel(position_lst[idx], vel=150, acc=300, ref=DR_BASE)
-            with open('/home/rokey/ros_ws/building_text/blue_print.txt', 'w', encoding='utf-8') as file:
-                file.write(str(idx+1))
-            with open('/home/rokey/ros_ws/building_text/build_list.txt', 'w', encoding='utf-8') as file:
-                file.write(str(build_list))    
-        # 측정 결과 출력
-        print('측정 완료')
-        print(build_list)
-
-
-    # 건설 시작
-    VELOCITY, ACC = 100, 100
-    if index >= 9:
-            print('건축완료')
-            with open('/home/rokey/ros_ws/building_text/construct_index.txt', 'w', encoding='utf-8') as file:
-                file.write(str(0))
-            with open('/home/rokey/ros_ws/building_text/blue_print.txt', 'w', encoding='utf-8') as file:
-                file.write(str(idx+1))
-    else:
-        for idx in range(index,len(build_list)):
-            print(f'{idx} 건설 시작')
             # initialization
-            movej(JReady, vel = 30, acc = 30)
+            movej(pos_home, vel = 30, acc = 30)
             release()
             mwait(0.5)
-            
-            # REQUESTED BUILDING CONSTRUCTIO    NS CHECK 
-            block_map = {
-                0: None, 
-                1: block_short,
-                2: block_long,
-                3: None  # or None, if not needed
-            }
-            block_for_construction = block_map.get(build_list[idx])
-            if block_for_construction is None:
-                print("블럭 타입 없음 또는 잘못된 입력")
-                continue
-
 
             # POSITION CHECK FOR BUILDING CONSTRUCTION
+            idx+=1
+            if idx == 1 :
+                block_to_place = step_1
+            elif idx == 2 :
+                block_to_place = step_2
+            elif idx == 3 :
+                block_to_place = step_3
+            elif idx == 4 :
+                block_to_place = step_4
+            elif idx == 5 :
+                block_to_place = step_5
+            elif idx == 6 :
+                block_to_place = step_6
+            elif idx == 7 :
+                block_to_place = step_7
+            elif idx == 8 :
+                block_to_place = step_8
+            elif idx == 9 :
+                block_to_place = step_9
             
-            step_map = {
-                0: step_1, 1: step_2, 2: step_3,
-                3: step_4, 4: step_5, 5: step_6,
-                6: step_7, 7: step_8, 8: step_9
-            }
-            block_to_place = step_map.get(idx)
-            if block_to_place is None:
+
+            # 팔레트 높이로 체크한 빌딩 단계 체크
+            if buildings == 0:
+                print(f"{idx} 단계에 요청받은 건설 의뢰가 존재하지 않아 다음 단계로 넘어갑니다.")
                 continue
 
-            # REPEAT UNTIL 4TH FLOOR CONSTRUCTED.
-            for floor in range(4):
-                print(f'{floor +1}층')
-                # GET BLOCKS FOR CONSTRUCTION
-                movel(block_for_construction, vel = VELOCITY, acc = ACC, ref=DR_BASE) # move to sourcing site 
-                mwait(0.5)
-                movel(block_to_down, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL) # move down to pick up blocks
-                mwait(0.5)
-                grip()
-                mwait(0.5)
-                movel(block_for_construction, vel = VELOCITY, acc = ACC) # move up
-                mwait(0.5)
+            elif buildings == 1 or buildings == 2:
+                
+                # buildings가 1이면 
+                block_for_construction = block_short if buildings == 1 else block_long
+                print(f"{idx}번 위치에 {buildings}타입 4층 탑 건설 시작.")
 
-                # CONSTRUCT
-                movel(block_to_place, vel = VELOCITY, acc = ACC)
+                # 4층 건설까지 반복.
+                for floor in range(4):
 
-                task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
-                time.sleep(1)
-                set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-                time.sleep(1)
-                force_condition = check_force_condition(DR_AXIS_Z, max=30)
+                    # 레고 블럭 좌표로 이동
+                    movel(block_for_construction, vel = VELOCITY, acc = ACC)
+                    print("1111")
+                    mwait(0.5)
+                    movel(block_to_down, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL)
+                    print("w222")
+                    mwait(0.5)
+                    grip()
+                    mwait(0.5)
+                    dummy = posx([395, -8, 240, 90, -120, 90])
 
-                while (force_condition == 0): # 힘 제어로 블럭 놓기
-                    force_condition = check_force_condition(DR_AXIS_Z, max=30) # 조건 만족하면 0 (ROS2에서)
+                ##################################################################################
+                    while True:
+                        di1 = get_digital_input(1)
+                        di2 = get_digital_input(2)
+                        di3 = get_digital_input(3)
+                        print(f'{floor+1}층 진행중')
+                        # 1. 그립 실패: [0,1,0]
+                        if [di1, di2, di3] == [1,0,0]:
+                            release()
+                            user_input = input("❌ 잡기 실패. 다시 시도하려면 'start' 입력: ")
+                            if user_input == "start":
+                                movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                                mwait(0.5)
+                                movel(block_to_down, vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)
+                                mwait(0.5)
+                                grip()
+                                continue
+                            else:
+                                print("⛔ 사용자 중단")
+                                break
 
-                release_force()
-                release_compliance_ctrl()
-                release()
-                mwait(0.2)
-                movel(block_to_place, vel = VELOCITY, acc = ACC)
-                mwait(0.2)
-                grip()
-                time.sleep(1)
-                task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
-                time.sleep(1)
-                set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-                time.sleep(1)
-                force_condition = check_force_condition(DR_AXIS_Z, max=40)
-                while (force_condition == 0): # 힘 제어로 블럭 놓기
-                    force_condition = check_force_condition(DR_AXIS_Z, max=40) # 조건 만족하면 0 (ROS2에서)
-                release_force()
-                release_compliance_ctrl()
-                mwait(0.2)
-                movel(block_to_place, vel = VELOCITY, acc = ACC)
-                mwait(0.2)
-                release()
-            with open('/home/rokey/ros_ws/building_text/construct_index.txt', 'w', encoding='utf-8') as file:
-                file.write(str(idx))
-            
-            print(f"{idx+1} 단계 완료, 다음 단계로 넘어갑니다.")
+                        # 2. 비정상 블록 감지: [0,0,1]
+                        elif [di1, di2, di3] == [0,0,1]:
+                            movel(dummy, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                            release()
+                            user_input = input("⚠️ 비정상 블록 감지됨. 다시 시도하려면 'start' 입력: ")
+                            if user_input == "start":
+                                movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                                mwait(0.5)
+                                grip()
+                                mwait(0.5)
+                                movel([0, 0, 100, 0, 0, 0], vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)
+                                continue
+                            else:
+                                print("⛔ 사용자 중단")
+                                break
+
+                        # 3. 정상 블록 감지: [0,1,1]
+                        elif [di1, di2, di3] == [0,1,1]:
+                            print("✅ 정상 블록 감지 완료!")
+                            break
+
+                        # 4. 예외 처리: 예상치 못한 조합
+                        else:
+                            print(f"⚠️ 측정중")
+                            time.sleep(3)  # 잠시 대기 후 다시 측정
+                            continue
+                    movel(block_for_construction, vel = VELOCITY, acc = ACC)
+                    print("33")
+                    mwait(0.5)
+
+                    # 레고블럭 쌓을 위치로 이동
+                    movel(block_to_place, vel = VELOCITY, acc = ACC)
+                    print("41")
+
+                    # Force 설정
+                    task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                    time.sleep(1)
+                    print("5551")
+                    set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                    print("166666")
+                    time.sleep(1)
+                    force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                    print("77777")
+
+                    while (force_condition == 0): # 힘 제어로 블럭 놓기
+                        force_condition = check_force_condition(DR_AXIS_Z, max=50) # 조건 만족하면 0 (ROS2에서)
+                    print("18888")
+
+                    release_force()
+                    release_compliance_ctrl()
+                    release()
+                    mwait(0.2)
+                    movel(block_for_spread, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL)
+                    print("19991")
+                    mwait(0.2)
+                    grip()
+                    time.sleep(1)
+                    task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                    time.sleep(1)
+                    print("11010101")
+                    set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                    time.sleep(1)
+                    force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                    while (force_condition == 0): # 힘 제어로 블럭 놓기
+                        force_condition = check_force_condition(DR_AXIS_Z, max=50) # 조건 만족하면 0 (ROS2에서)
+                    release_force()
+                    release_compliance_ctrl()
+                    mwait(0.2)
+                    movel(block_to_place, vel = VELOCITY, acc = ACC)
+                    mwait(0.2)
+                    release()
+
+
+            elif buildings == 3:
+                # 층별/블록별 건설 설계도
+                print(f"{idx}번 위치에 {buildings}타입 4층 탑 건설 시작.")
+                _3type_building = [[3, 3], [2, 2, 2], [3, 3], [2, 2, 2]]
+                
+                # 한 층씩 건설
+                for fl, floor_plan in enumerate(_3type_building):
+                    # 한 층의 블록들을 순서대로 건설
+                    for block_count, block_type in enumerate(floor_plan):
+                        
+                        # 사용할 블록과 옆으로 놓기 위한 상대 좌표 결정
+                        block_for_construction = block_short if block_type == 2 else block_long
+                        relative_offset = offset_for_short if block_type == 2 else offset_for_long
+                        
+                        # 블록 집기 동작
+                        movel(block_for_construction, vel=VELOCITY, acc=ACC)
+                        mwait(0.5)
+                        movel(block_to_down, vel=VELOCITY, acc=ACC, mod=DR_MV_MOD_REL)
+                        mwait(0.5)
+                        grip()
+                        mwait(0.5)
+                        movel(block_for_construction, vel=VELOCITY, acc=ACC)
+                        mwait(0.5)
+
+                        # 블록 놓을 최종 위치 계산
+                        final_placement_pose = block_to_place[:]
+                        if block_count > 0:
+                            final_placement_pose[0] += relative_offset[0] * block_count
+                            final_placement_pose[1] += relative_offset[1] * block_count
+                        
+                        # 계산된 위치에 블록 조립 (두 번 누르기 로직)
+                        movel(final_placement_pose, vel=VELOCITY, acc=ACC)
+                        task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                        time.sleep(1)
+                        set_desired_force(fd=[0, 0, -30, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                        time.sleep(1)
+                        force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                        while (force_condition == 0):
+                            force_condition = check_force_condition(DR_AXIS_Z, max=50)
+                        release_force()
+                        release_compliance_ctrl()
+                        release()
+                        mwait(0.2)
+                        movel(block_for_spread, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL)
+                        mwait(0.2)
+                        grip()
+                        time.sleep(1)
+                        task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                        time.sleep(1)
+                        set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                        time.sleep(1)
+                        force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                        while (force_condition == 0):
+                            force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                        release_force()
+                        release_compliance_ctrl()
+                        mwait(0.2)
+                        movel(final_placement_pose, vel=VELOCITY, acc=ACC)
+                        mwait(0.2)
+                        release()
+
+            print(f"{idx} 단계 완료, 다음 단계로 넘어갑니다.")
+
 
     rclpy.shutdown()
-
 if __name__ == "__main__":
     main()
