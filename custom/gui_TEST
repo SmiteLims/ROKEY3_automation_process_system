@@ -19,10 +19,9 @@ ROBOT_ID = "dsr01"
 ROBOT_MODEL = "m0609"
 VELOCITY, ACC = 60, 60
 ON, OFF = 1, 0
-# Force control thresholds
-FIRST, SECOND = 30, 50
+FIRST, SECOND = 30, 50  # Force thresholds
 
-# Initialize DR_init identifiers (required before node creation)
+# Initialize DR_init identifiers (must set before node creation)
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
 
@@ -31,8 +30,7 @@ class StatusGUI(QWidget):
         super().__init__()
         self.setWindowTitle("Brick Assembly GUI")
         self.resize(400, 350)
-
-        # 3x3 grid for block heights
+        # 3x3 grid
         grid = QGridLayout()
         self.labels = []
         for i in range(9):
@@ -45,11 +43,9 @@ class StatusGUI(QWidget):
             lbl.setPalette(pal)
             grid.addWidget(lbl, i//3, i%3)
             self.labels.append(lbl)
-
         self.status_label = QLabel("대기 중...")
         self.status_label.setAlignment(Qt.AlignCenter)
         self.start_btn = QPushButton("시작")
-
         layout = QVBoxLayout()
         layout.addLayout(grid)
         layout.addWidget(self.status_label)
@@ -66,14 +62,13 @@ class StatusGUI(QWidget):
     def update_status_text(self, text):
         self.status_label.setText(text)
 
-# Core process moved into a thread
+# Main process
 def run_process(gui: StatusGUI):
     # ROS2 init
     rclpy.init()
     node = rclpy.create_node("brick_assemble_node", namespace=ROBOT_ID)
     DR_init.__dsr__node = node
-
-    # Import DSR APIs
+    # Import DSR API
     try:
         from DSR_ROBOT2 import (
             get_digital_input, set_digital_output,
@@ -90,19 +85,16 @@ def run_process(gui: StatusGUI):
     except ImportError as e:
         gui.update_status_text(f"Import error: {e}")
         return
-
-    # Load system variables
+    # Load system files
     with open('/home/rokey/ros_ws/building_text/build_list.txt','r',encoding='utf-8') as f:
         build_list = ast.literal_eval(f.read())
     with open('/home/rokey/ros_ws/building_text/blue_print_index.txt','r',encoding='utf-8') as f:
-        i = int(f.read())
+        blueprint_index = int(f.read())
     with open('/home/rokey/ros_ws/building_text/construct_index.txt','r',encoding='utf-8') as f:
         construct_index = ast.literal_eval(f.read())
-
     gui.update_block_status(build_list)
-    gui.update_status_text(f"도면 불러옴: {build_list}")
-
-    # Define coordinates ( 그대로 반영 )
+    gui.update_status_text(f"도면: {build_list}")
+    # Coordinates
     blueprint_xy1 = posx(194.38, -60.5, 150.0, 152.35, 180, 143.21)
     blueprint_xy2 = posx(244.83, -53.04, 150.0, 166.55, 180, 157.29)
     blueprint_xy3 = posx(295.89, -45.59, 150.0, 161, -180, 151.96)
@@ -126,28 +118,28 @@ def run_process(gui: StatusGUI):
         posx(516.84,162.17,175,90.39,-127.98,90), posx(557.77,124.13,175,90.39,-127.98,90),
         posx(557.78,-193.65,175,90.39,-127.98,90)
     ]
-    dummy = posj([37.12, -0.03, 100.27, -0.02, 79.76, 129.49])
+    example_amp = [0,0,0,0,0,100]
     pos_home = posj(0,0,90,0,90,0)
     height = 120
     block_short = posx(299.07,89.08,41+height,13.84,180,105.56)
     block_long = posx(299.51,14.82,41+height,9.72,180,101.8)
-    step_lst = [step_1, step_2, step_3, step_4, step_5, step_6, step_7, step_8, step_9] = [
-        posx(401.43,114.9,35+height,69,180,68.92), posx(480.75,114.37,35+height,3.87,180,4.17),
-        posx(555.21,113.93,35+height,10.35,180,10.71), posx(400.75,2.88,35+height,178.8,180,179.27),
-        posx(480.54,2.21,35+height,17.65,180,18.13), posx(555.57,1.85,35+height,169.21,180,169.69),
-        posx(399.66,-108.28,35+height,160.73,180,161.28), posx(479.99,-108.84,35+height,167.52,180,167.91),
-        posx(555.68,-109.54,35+height,146.96,180,147.18)
-    ]
+    step_1 = posx(401.43,114.9,35+height,69,180,68.92)
+    step_2 = posx(480.75,114.37,35+height,3.87,180,4.17)
+    step_3 = posx(555.21,113.93,35+height,10.35,180,10.71)
+    step_4 = posx(400.75,2.88,35+height,178.8,180,179.27)
+    step_5 = posx(480.54,2.21,35+height,17.65,180,18.13)
+    step_6 = posx(555.57,1.85,35+height,169.21,180,169.69)
+    step_7 = posx(399.66,-108.28,35+height,160.73,180,161.28)
+    step_8 = posx(479.99,-108.84,35+height,167.52,180,167.91)
+    step_9 = posx(555.68,-109.54,35+height,146.96,180,147.18)
     block_to_down = posx(0,0,-height,0,0,0)
     block_for_spread = posx(0,0,40,0,0,0)
     offset_for_short = posx(0,-31.9,0,0,0,0)
     offset_for_long = posx(0,-47.7,0,0,0,0)
-
+    dummy = posj([37.12,-0.03,100.27,-0.02,79.76,129.49])
     # Helper functions
-    def grip():
-        set_digital_output(1, ON); set_digital_output(2, OFF); time.sleep(0.5)
-    def release():
-        set_digital_output(1, OFF); set_digital_output(2, ON); time.sleep(0.5)
+    def grip(): set_digital_output(1,ON); set_digital_output(2,OFF); time.sleep(0.5)
+    def release(): set_digital_output(1,OFF); set_digital_output(2,ON); time.sleep(0.5)
     def check_bar(idx):
         task_compliance_ctrl()
         set_stiffnessx([3000,3000,3000,200,200,200], time=0)
@@ -160,60 +152,94 @@ def run_process(gui: StatusGUI):
         else: build_list[idx]=0
         release_force(time=0); release_compliance_ctrl()
         gui.update_block_status(build_list)
-
-    # Cement function
     def cement():
-        gui.update_status_text('시멘트 작업 시작')
+        gui.update_status_text('시멘트 시작')
         print('시멘트 도구 장비')
         set_ref_coord(DR_BASE); movel(cup_up,vel=VELOCITY,acc=ACC); mwait(0.1)
         release(); mwait(0.1); movel(cup_down,vel=VELOCITY,acc=ACC); mwait(0.1)
         grip(); mwait(0.1); movel(cup_up,vel=VELOCITY,acc=ACC)
-        movej(JReady,vel=VELOCITY,acc=ACC)
-        amove_periodic(amp=example_amp,period=3,atime=0.02,repeat=2,ref=DR_TOOL)
-        mwait(0.1); movesx(xlist,vel=[100,30],acc=[200,60],vel_opt=DR_MVS_VEL_CONST)
-        mwait(0.1); movel(cup_up,vel=VELOCITY,acc=ACC); mwait(0.1)
+        print('시멘트 몰탈 시작'); movej(JReady,vel=VELOCITY,acc=ACC)
+        amove_periodic(amp=example_amp,period=3,atime=0.02,repeat=2,ref=DR_TOOL); mwait(0.1)
+        print('몰탈 시작'); movesx(xlist,vel=[100,30],acc=[200,60],vel_opt=DR_MVS_VEL_CONST); mwait(0.1)
+        print('몰탈 정비'); movel(cup_up,vel=VELOCITY,acc=ACC); mwait(0.1)
         movel(cup_down,vel=VELOCITY,acc=ACC); mwait(0.1); release(); mwait(0.1)
         movel(cup_up,vel=VELOCITY,acc=ACC); mwait(0.1)
-        gui.update_status_text('시멘트 작업 완료')
-
-    # Main assembly sequence
+        gui.update_status_text('시멘트 완료')
+    # Main
     set_tool("Tool Weight_2FG"); set_tcp("2FG_TCP")
     movej(pos_home,vel=80,acc=80); release(); mwait(0.1); grip(); mwait(0.2)
-    gui.update_status_text('초기 위치 설정 완료')
-
-    gui.update_status_text('측정 시작'); print('측정 시작')
-    if i<9:
-        for idx in range(i, len(position_lst)):
-            gui.update_status_text(f'{idx}위치 측정 시작')
+    gui.update_status_text('초기 위치 완료')
+    gui.update_status_text('측정 시작')
+    print('측정 시작')
+    if blueprint_index<9:
+        for idx in range(blueprint_index, len(position_lst)):
+            gui.update_status_text(f'{idx}측정 시작'); print(f'{idx}측정 시작')
             movel(position_lst[idx],vel=150,acc=300,ref=DR_BASE); check_bar(idx)
             movel(position_lst[idx],vel=150,acc=300,ref=DR_BASE)
             with open('/home/rokey/ros_ws/building_text/blue_print_index.txt','w',encoding='utf-8') as f: f.write(str(idx+1))
             with open('/home/rokey/ros_ws/building_text/build_list.txt','w',encoding='utf-8') as f: f.write(str(build_list))
-            gui.update_status_text(f'{idx}위치 측정 완료')
+            gui.update_status_text(f'{idx}완료')
         gui.update_status_text('측정 완료'); print('측정 완료')
     else:
         gui.update_status_text('이미 측정 완료')
-
     time.sleep(1)
     if construct_index<=0:
-        gui.update_status_text('시멘트 시작'); cement(); time.sleep(1)
+        cement(); time.sleep(1)
     gui.update_status_text('건설 시작'); print('건설 시작')
-
     if construct_index<9:
         for idx in range(construct_index, len(build_list)):
             movej(pos_home,vel=30,acc=30); release(); mwait(0.5)
             if build_list[idx]==0:
-                gui.update_status_text(f'{idx}단계 건설 없음')
+                gui.update_status_text(f'{idx}건설 없음');
                 with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx))
                 continue
-            # handle build_list[idx] in {1,2} and 3 with gui.update_status_text(...) inside loops (analogous to prints)
-            # ... (remaining construction logic identical to original, but insert gui.update_status_text at key points)
-    gui.update_status_text('건설 완료')
+            elif build_list[idx] in (1,2):
+                block_for_construction = block_short if build_list[idx]==1 else block_long
+                gui.update_status_text(f'{idx}타입{build_list[idx]} 건설 시작')
+                for floor in range(4):
+                    print(f'{idx}층{floor}집기'); gui.update_status_text(f'{idx}층{floor}집기')
+                    movel(block_for_construction,vel=VELOCITY,acc=ACC); movel(block_to_down,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); mwait(0.5)
+                    while True:
+                        di=[get_digital_input(i) for i in (1,2,3)]
+                        if di==[0,1,1]: break
+                        release(); movel(dummy,vel=VELOCITY,acc=ACC); input('retry'); movel(block_for_construction,vel=VELOCITY,acc=ACC)
+                    movel(block_for_construction,vel=VELOCITY,acc=ACC)
+                    movel([step_1,step_2,step_3,step_4,step_5,step_6,step_7,step_8,step_9][idx],vel=VELOCITY,acc=ACC)
+                    task_compliance_ctrl(stx=[500,500,500,100,100,100]); time.sleep(1)
+                    set_desired_force(fd=[0,0,-50,0,0,0],dir=[0,0,1,0,0,0],mod=DR_FC_MOD_REL)
+                    while not check_force_condition(DR_AXIS_Z,max=SECOND): pass
+                    release_force(); release_compliance_ctrl(); release()
+                    movel(block_for_spread,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); time.sleep(1)
+                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx))
+                gui.update_status_text(f'{idx}완료')
+            else:
+                gui.update_status_text(f'{idx}타입3 건설 시작')
+                _3type_building=[[3,3],[2,2,2],[3,3],[2,2,2]]
+                for fl,plan in enumerate(_3type_building):
+                    for bc,bt in enumerate(plan):
+                        print(f'{idx}타입3 플로어{fl} 블록{bc}'); gui.update_status_text(f'{idx}3층{fl}블록{bc}')
+                        block_for_construction=block_short if bt==2 else block_long
+                        movel(block_for_construction,vel=VELOCITY,acc=ACC); movel(block_to_down,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); mwait(0.5)
+                        rel=offset_for_short if bt==2 else offset_for_long
+                        pose=[step_1,step_2,step_3,step_4,step_5,step_6,step_7,step_8,step_9][idx].copy()
+                        if bc: pose[0]+=rel[0]*bc; pose[1]+=rel[1]*bc
+                        movel(pose,vel=VELOCITY,acc=ACC)
+                        task_compliance_ctrl(stx=[500,500,500,100,100,100]); time.sleep(1)
+                        set_desired_force(fd=[0,0,-30,0,0,0],dir=[0,0,1,0,0,0],mod=DR_FC_MOD_REL)
+                        while not check_force_condition(DR_AXIS_Z,max=SECOND): pass
+                        release_force(); release_compliance_ctrl(); release()
+                        movel(block_for_spread,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); mwait(0.5)
+                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx))
+                gui.update_status_text(f'{idx}완료')
+        gui.update_status_text('전체 건설 완료')
+    else:
+        gui.update_status_text('건설 이미 완료')
     rclpy.shutdown()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    gui = StatusGUI(); gui.show()
+    gui = StatusGUI()
+    gui.show()
     thread = threading.Thread(target=run_process, args=(gui,))
     gui.start_btn.clicked.connect(thread.start)
     sys.exit(app.exec_())
