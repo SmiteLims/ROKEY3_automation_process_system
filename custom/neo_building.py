@@ -320,16 +320,18 @@ def main(args=None):
                     for floor in range(4):
 
                         # 레고 블럭 좌표로 이동
+                        if build_list[idx] == 1:
+                            print('block_short 이동')
+                        else:
+                            print('block_long 이동')
                         movel(block_for_construction, vel = VELOCITY, acc = ACC)
-                        print("1111")
                         mwait(0.5)
                         movel(block_to_down, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL)
-                        print("w222")
                         mwait(0.5)
                         grip()
                         mwait(0.5)
                         
-
+                        print('블록 탐지')
                     ##################################################################################
                         while True:
                             di1 = get_digital_input(1)
@@ -379,39 +381,31 @@ def main(args=None):
                                 continue
                         #######################################################################################
                         movel(block_for_construction, vel = VELOCITY, acc = ACC)
-                        print("33")
                         mwait(0.5)
 
                         # 레고블럭 쌓을 위치로 이동
+                        print('블럭 쌓기')
                         movel(block_to_place, vel = VELOCITY, acc = ACC)
-                        print("41")
 
                         # Force 설정
                         task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
                         time.sleep(1)
-                        print("5551")
                         set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-                        print("166666")
                         time.sleep(1)
                         force_condition = check_force_condition(DR_AXIS_Z, max=FIRST)
-                        print("77777")
-
                         while (force_condition == 0): # 힘 제어로 블럭 놓기
                             force_condition = check_force_condition(DR_AXIS_Z, max=SECOND) # 조건 만족하면 0 (ROS2에서)
-                        print("18888")
-
                         release_force()
                         release_compliance_ctrl()
                         release()
                         mwait(0.2)
                         movel(block_for_spread, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL)
-                        print("19991")
+                        print('블럭 고정')
                         mwait(0.2)
                         grip()
                         time.sleep(1)
                         task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
                         time.sleep(1)
-                        print("11010101")
                         set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                         time.sleep(1)
                         force_condition = check_force_condition(DR_AXIS_Z, max=40)
@@ -449,6 +443,7 @@ def main(args=None):
                             mwait(0.5)
                             grip()
                             mwait(0.5)
+                            print('블록 탐지')
                             ##################################################################################
                             while True:
                                 di1 = get_digital_input(1)
@@ -505,7 +500,7 @@ def main(args=None):
                             if block_count > 0:
                                 final_placement_pose[0] += relative_offset[0] * block_count
                                 final_placement_pose[1] += relative_offset[1] * block_count
-                            
+                            print('블럭 쌓기')
                             # 계산된 위치에 블록 조립 (두 번 누르기 로직)
                             movel(final_placement_pose, vel=VELOCITY, acc=ACC)
                             task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
@@ -519,6 +514,7 @@ def main(args=None):
                             release_compliance_ctrl()
                             release()
                             mwait(0.2)
+                            print('블럭 고정')
                             movel(block_for_spread, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL)
                             mwait(0.2)
                             grip()
