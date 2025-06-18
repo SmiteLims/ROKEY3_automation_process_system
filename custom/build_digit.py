@@ -230,17 +230,58 @@ def main(args=None):
                 mwait(0.5)
                 grip()
                 mwait(0.5)
-                while get_digital_input(3) == 0:  # 블록 안 잡힘
-                    release()
-                    print("❌ 잡기 실패. 다시 시도.")
-                    movel(block_for_construction, vel = VELOCITY, acc = ACC, ref=DR_BASE)
-                    mwait(0.5)
-                    if input("❌ 잡기 실패. 다시 시도. start를 입력해 주세요: ") == "start":
-                        movel(block_to_down, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL) # move down to pick up blocks
-                        mwait(0.5)
-                        grip()
-                        mwait(0.5)
+
+                dummy = posx([395, -8, 240, 90, -120, 90])
+
+                ##################################################################################
+                while True:
+                    di1 = get_digital_input(1)
+                    di2 = get_digital_input(2)
+                    di3 = get_digital_input(3)
+
+                    # 1. 그립 실패: [0,1,0]
+                    if [di1, di2, di3] == [1,0,0]:
+                        release()
+                        user_input = input("❌ 잡기 실패. 다시 시도하려면 'start' 입력: ")
+                        if user_input == "start":
+                            movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                            mwait(0.5)
+                            grip()
+                            mwait(0.5)
+                            movel([0, 0, 100, 0, 0, 0], vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)
+                            continue
+                        else:
+                            print("⛔ 사용자 중단")
+                            break
+
+                    # 2. 비정상 블록 감지: [0,0,1]
+                    elif [di1, di2, di3] == [0,0,1]:
+                        movel(dummy, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                        release()
+                        user_input = input("⚠️ 비정상 블록 감지됨. 다시 시도하려면 'start' 입력: ")
+                        if user_input == "start":
+                            movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                            mwait(0.5)
+                            grip()
+                            mwait(0.5)
+                            movel([0, 0, 100, 0, 0, 0], vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)
+                            continue
+                        else:
+                            print("⛔ 사용자 중단")
+                            break
+
+                    # 3. 정상 블록 감지: [0,1,1]
+                    elif [di1, di2, di3] == [0,1,1]:
+                        print("✅ 정상 블록 감지 완료!")
                         break
+
+                    # 4. 예외 처리: 예상치 못한 조합
+                    else:
+                        print(f"⚠️ 예외 상태: 다시 측정 중...")
+                        mwait(0.2)  # 잠시 대기 후 다시 측정
+                        continue
+
+                ##################################################################################
 
                 movel(block_for_construction, vel = VELOCITY, acc = ACC) # move up
                 mwait(0.5)
