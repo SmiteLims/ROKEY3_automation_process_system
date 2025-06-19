@@ -17,13 +17,33 @@ from PyQt5.QtGui import QColor, QPalette
 # Configuration
 ROBOT_ID = "dsr01"
 ROBOT_MODEL = "m0609"
-VELOCITY, ACC = 60, 60
+VELOCITY, ACC = 100, 200
 ON, OFF = 1, 0
 FIRST, SECOND = 30, 50  # Force thresholds
 
 # Initialize DR_init identifiers (must set before node creation)
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
+def main():
+    app = QApplication(sys.argv)
+    gui = StatusGUI()
+
+    # 🔧 여기에 retry_event 정의 필요
+    retry_event = threading.Event()
+
+    thread = threading.Thread(target=run_process, args=(gui, retry_event), daemon=True)
+
+    def on_start():
+        if not thread.is_alive():
+            thread.start()
+            gui.start_btn.setText("시작")
+        else:
+            retry_event.set()
+
+    gui.start_btn.clicked.connect(on_start)
+
+    gui.show()
+    sys.exit(app.exec_())
 
 class StatusGUI(QWidget):
     def __init__(self):
@@ -138,8 +158,10 @@ def run_process(gui: StatusGUI, retry_event: threading.Event):
     offset_for_long = posx(0,-47.7,0,0,0,0)
     dummy = posj([37.12,-0.03,100.27,-0.02,79.76,129.49])
     # Helper functions
-    def grip(): set_digital_output(1,ON); set_digital_output(2,OFF); time.sleep(0.5)
-    def release(): set_digital_output(1,OFF); set_digital_output(2,ON); time.sleep(0.5)
+    def grip(): 
+        set_digital_output(1,ON); set_digital_output(2,OFF); time.sleep(0.5)
+    def release(): 
+        set_digital_output(1,OFF); set_digital_output(2,ON); time.sleep(0.5)
     def check_bar(idx):
         task_compliance_ctrl()
         set_stiffnessx([3000,3000,3000,200,200,200], time=0)
@@ -156,49 +178,54 @@ def run_process(gui: StatusGUI, retry_event: threading.Event):
         gui.update_status_text('시멘트 시작')
         print('시멘트 도구 장비')
         set_ref_coord(DR_BASE); movel(cup_up,vel=VELOCITY,acc=ACC); mwait(0.1)
-        release(); mwait(0.1); movel(cup_down,vel=VELOCITY,acc=ACC); mwait(0.1)
-        grip(); mwait(0.1); movel(cup_up,vel=VELOCITY,acc=ACC)
+        release(); movel(cup_down,vel=VELOCITY,acc=ACC); mwait(0.1)
+        grip(); movel(cup_up,vel=VELOCITY,acc=ACC)
         print('시멘트 몰탈 시작'); movej(JReady,vel=VELOCITY,acc=ACC)
         amove_periodic(amp=example_amp,period=3,atime=0.02,repeat=2,ref=DR_TOOL); mwait(0.1)
         print('몰탈 시작'); movesx(xlist,vel=[100,30],acc=[200,60],vel_opt=DR_MVS_VEL_CONST); mwait(0.1)
         print('몰탈 정비'); movel(cup_up,vel=VELOCITY,acc=ACC); mwait(0.1)
-        movel(cup_down,vel=VELOCITY,acc=ACC); mwait(0.1); release(); mwait(0.1)
+        movel(cup_down,vel=VELOCITY,acc=ACC); mwait(0.1); release()
         movel(cup_up,vel=VELOCITY,acc=ACC); mwait(0.1)
         gui.update_status_text('시멘트 완료')
     # Main
     set_tool("Tool Weight_2FG"); set_tcp("2FG_TCP")
-    movej(pos_home,vel=80,acc=80); release(); mwait(0.1); grip(); mwait(0.2)
+    release(); movej(pos_home,vel=80,acc=80); time.sleep(0.5); grip()
     gui.update_status_text('초기 위치 완료')
     gui.update_status_text('측정 시작')
     print('측정 시작')
     if blueprint_index<9:
         for idx in range(blueprint_index, len(position_lst)):
             gui.update_status_text(f'{idx}측정 시작'); print(f'{idx}측정 시작')
-            movel(position_lst[idx],vel=150,acc=300,ref=DR_BASE); check_bar(idx)
-            movel(position_lst[idx],vel=150,acc=300,ref=DR_BASE)
+            movel(position_lst[idx],vel=VELOCITY,acc=ACC,ref=DR_BASE); check_bar(idx)
+            movel(position_lst[idx],vel=VELOCITY,acc=ACC,ref=DR_BASE)
             with open('/home/rokey/ros_ws/building_text/blue_print_index.txt','w',encoding='utf-8') as f: f.write(str(idx+1))
             with open('/home/rokey/ros_ws/building_text/build_list.txt','w',encoding='utf-8') as f: f.write(str(build_list))
-            gui.update_status_text(f'{idx}완료')
+            gui.update_status_text(f'{idx}번 완료')
         gui.update_status_text('측정 완료'); print('측정 완료')
     else:
         gui.update_status_text('이미 측정 완료')
     time.sleep(1)
-    if construct_index<=0:
+    if blueprint_index<=0:
         cement(); time.sleep(1)
     gui.update_status_text('건설 시작'); print('건설 시작')
     if construct_index<9:
         for idx in range(construct_index, len(build_list)):
-            movej(pos_home,vel=30,acc=30); release(); mwait(0.5)
+            release()
             if build_list[idx]==0:
-                gui.update_status_text(f'{idx}건설 없음');
-                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx))
+                gui.update_status_text(f'{idx}건설 없음')
+                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx+1))
                 continue
             elif build_list[idx] in (1,2):
+                timeout = 10
                 block_for_construction = block_short if build_list[idx]==1 else block_long
                 gui.update_status_text(f'{idx}타입{build_list[idx]} 건설 시작')
                 for floor in range(4):
-                    print(f'{idx}층{floor}집기'); gui.update_status_text(f'{idx}층{floor}집기')
-                    movel(block_for_construction,vel=VELOCITY,acc=ACC); movel(block_to_down,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); mwait(0.5)
+                    print(f'{idx}층{floor}집기'); gui.update_status_text(f'{idx}층{floor}집기')                    
+                    movel(block_for_construction,vel=VELOCITY,acc=ACC)
+                    mwait(0.5) 
+                    movel(block_to_down,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL)
+                    mwait(0.5) 
+                    grip()    
                     while True:
                         di1 = get_digital_input(1)
                         di2 = get_digital_input(2)
@@ -210,19 +237,17 @@ def run_process(gui: StatusGUI, retry_event: threading.Event):
                             gui.update_status_text("❌ 그립 실패 — Start 버튼을 눌러 재시도")
                             retry_event.clear()      # 이전 신호 초기화
                             retry_event.wait()       # 버튼 클릭될 때까지 대기
-                            movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
-                            mwait(0.5)
-                            movel(block_to_down, vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)
-                            mwait(0.5)
                             grip()
                             continue
-
-
                         # 2. 비정상 블록 감지: [0,0,1]
                         elif [di1, di2, di3] == [0,0,1]:
-                            movej(dummy, vel=VELOCITY, acc=ACC)
-                            release()
                             gui.update_status_text("⚠️ 비정상 블록 — Start 버튼을 눌러 재시도")
+                            movej(dummy, vel=VELOCITY, acc=ACC)
+                            mwait(0.5)
+                            release()
+                            movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                            mwait(0.5)
+                            movel(block_to_down, vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)                            
                             retry_event.clear()
                             retry_event.wait()
                             continue
@@ -233,39 +258,137 @@ def run_process(gui: StatusGUI, retry_event: threading.Event):
                         # 4. 예외 처리: 예상치 못한 조합
                         else:
                             print(f"⚠️ 측정중")
-                            time.sleep(3)  # 잠시 대기 후 다시 측정
+                            time.sleep(1)  # 잠시 대기 후 다시 측정
+                            grip()
                             continue
-                    movel(block_for_construction,vel=VELOCITY,acc=ACC)
-                    movel([step_1,step_2,step_3,step_4,step_5,step_6,step_7,step_8,step_9][idx],vel=VELOCITY,acc=ACC)
-                    task_compliance_ctrl(stx=[500,500,500,100,100,100]); time.sleep(1)
-                    set_desired_force(fd=[0,0,-50,0,0,0],dir=[0,0,1,0,0,0],mod=DR_FC_MOD_REL)
-                    while not check_force_condition(DR_AXIS_Z,max=SECOND): pass
-                    release_force(); release_compliance_ctrl(); release()
-                    movel(block_for_spread,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); time.sleep(1)
-                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx))
+                        
+                    movel(block_for_construction, vel = VELOCITY, acc = ACC)
+                    mwait(0.5)
+
+                    # 레고블럭 쌓을 위치로 이동
+                    print('블럭 쌓기')
+                    movel([step_1,step_2,step_3,step_4,step_5,step_6,step_7,step_8,step_9][idx], vel = VELOCITY, acc = ACC)
+
+                    # Force 설정
+                    task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                    time.sleep(1)
+                    set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                    time.sleep(1)
+                    force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                    start_time = time.time()                    
+                    while force_condition == 0 and (time.time() - start_time < timeout):
+                        force_condition = check_force_condition(DR_AXIS_Z, max=SECOND)
+                    timeout -= 1.2                    
+                    release_compliance_ctrl()
+                    release()
+                    mwait(0.2)
+                    movel(block_for_spread, vel = VELOCITY, acc = ACC, mod=DR_MV_MOD_REL)
+                    print('블럭 고정')
+                    mwait(0.2)
+                    grip()
+                    task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                    time.sleep(1)
+                    set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                    time.sleep(1)
+                    force_condition = check_force_condition(DR_AXIS_Z, max=40)
+                    start_time = time.time()
+                    while force_condition == 0:
+                        force_condition = check_force_condition(DR_AXIS_Z, max=SECOND)
+                           
+                    release_force()
+                    release_compliance_ctrl()
+                    mwait(0.2)
+                    movel([step_1,step_2,step_3,step_4,step_5,step_6,step_7,step_8,step_9][idx], vel = VELOCITY, acc = ACC)
+                    mwait(0.2)
+                    release()               
+                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx+1))
                 gui.update_status_text(f'{idx}완료')
             else:
                 gui.update_status_text(f'{idx}타입3 건설 시작')
                 _3type_building=[[3,3],[2,2,2],[3,3],[2,2,2]]
+                timeout = 11
                 for fl,plan in enumerate(_3type_building):
+                    timeout -= 1
+                    
                     for bc,bt in enumerate(plan):
                         print(f'{idx}타입3 플로어{fl} 블록{bc}'); gui.update_status_text(f'{idx}3층{fl}블록{bc}')
                         block_for_construction=block_short if bt==2 else block_long
-                        movel(block_for_construction,vel=VELOCITY,acc=ACC); movel(block_to_down,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); mwait(0.5)
+                        movel(block_for_construction,vel=VELOCITY,acc=ACC);mwait(0.5); movel(block_to_down,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); mwait(0.5); grip()
+                        while True:
+                            di1 = get_digital_input(1)
+                            di2 = get_digital_input(2)
+                            di3 = get_digital_input(3)
+                            print(f'{fl+1}층 진행중')
+                            # 1. 그립 실패: [0,1,0]
+                            if [di1, di2, di3] == [1,0,0]:
+                                release()
+                                gui.update_status_text("❌ 그립 실패 — Start 버튼을 눌러 재시도")
+                                retry_event.clear()      # 이전 신호 초기화
+                                retry_event.wait()       # 버튼 클릭될 때까지 대기
+                                grip()
+                                continue
+                            # 2. 비정상 블록 감지: [0,0,1]
+                            elif [di1, di2, di3] == [0,0,1]:
+                                gui.update_status_text("⚠️ 비정상 블록 — Start 버튼을 눌러 재시도")
+                                movej(dummy, vel=VELOCITY, acc=ACC)
+                                mwait(0.5)
+                                release()
+                                movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                                mwait(0.5)
+                                movel(block_to_down, vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)                            
+                                retry_event.clear()
+                                retry_event.wait()
+                                continue
+                            # 3. 정상 블록 감지: [0,1,1]
+                            elif [di1, di2, di3] == [0,1,1]:
+                                print("✅ 정상 블록 감지 완료!")
+                                break
+                            # 4. 예외 처리: 예상치 못한 조합
+                            else:
+                                print(f"⚠️ 측정중")
+                                time.sleep(1)  # 잠시 대기 후 다시 측정
+                                grip()
+                                continue
+                        movel(block_for_construction, vel = VELOCITY, acc = ACC)
+                        mwait(0.5)
                         rel=offset_for_short if bt==2 else offset_for_long
                         pose=[step_1,step_2,step_3,step_4,step_5,step_6,step_7,step_8,step_9][idx].copy()
                         if bc: pose[0]+=rel[0]*bc; pose[1]+=rel[1]*bc
                         movel(pose,vel=VELOCITY,acc=ACC)
                         task_compliance_ctrl(stx=[500,500,500,100,100,100]); time.sleep(1)
-                        set_desired_force(fd=[0,0,-30,0,0,0],dir=[0,0,1,0,0,0],mod=DR_FC_MOD_REL)
-                        while not check_force_condition(DR_AXIS_Z,max=SECOND): pass
+                        set_desired_force(fd=[0,0,-30,0,0,0],dir=[0,0,1,0,0,0],mod=DR_FC_MOD_REL);time.sleep(1)
+                        force_condition = check_force_condition(DR_AXIS_Z, max=FIRST)
+                        start_time = time.time()                        
+                        while force_condition == 0 and (time.time() - start_time < timeout):
+                             force_condition = check_force_condition(DR_AXIS_Z, max=SECOND)       
                         release_force(); release_compliance_ctrl(); release()
-                        movel(block_for_spread,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); mwait(0.5)
-                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx))
+                        movel(block_for_spread,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip()
+                        task_compliance_ctrl(stx=[500, 500, 500, 100, 100, 100])
+                        time.sleep(1)
+                        set_desired_force(fd=[0, 0, -50, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                        time.sleep(1)
+                        force_condition = check_force_condition(DR_AXIS_Z, max=SECOND)
+                        start_time = time.time()    
+                        while force_condition == 0:
+                            force_condition = check_force_condition(DR_AXIS_Z, max=SECOND)                        
+                        release_force()
+                        release_compliance_ctrl()
+                        mwait(0.2)
+                        movel(pose, vel=VELOCITY, acc=ACC)
+                        mwait(0.2)
+                        release()                
+                with open('/home/rokey/ros_ws/building_text/construct_index.txt','w',encoding='utf-8') as f: f.write(str(idx+1))
                 gui.update_status_text(f'{idx}완료')
         gui.update_status_text('전체 건설 완료')
+        movej(pos_home,vel=30,acc=30); 
     else:
         gui.update_status_text('건설 이미 완료')
+        with open('/home/rokey/ros_ws/building_text/blue_print_index.txt', 'w', encoding='utf-8') as file:
+            file.write(str(0))
+        with open('/home/rokey/ros_ws/building_text/construct_index.txt', 'w', encoding='utf-8') as file:
+            file.write(str(0))   
+        with open('/home/rokey/ros_ws/building_text/build_list.txt', 'w', encoding='utf-8') as file:
+                    file.write(str([0,0,0,0,0,0,0,0,0])) 
     rclpy.shutdown()
 
 if __name__ == "__main__":
@@ -287,7 +410,7 @@ if __name__ == "__main__":
         # 스레드를 한 번만 시작
         if not worker_thread.is_alive():
             worker_thread.start()
-            gui.start_btn.setText("재시도")      # 버튼 텍스트 바꾸거나
+            gui.start_btn.setText("시작")      # 버튼 텍스트 바꾸거나
         # 이후 누를 땐 retry_event.set()만 작동
         retry_event.set()
 
