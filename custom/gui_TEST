@@ -63,7 +63,7 @@ class StatusGUI(QWidget):
         self.status_label.setText(text)
 
 # Main process
-def run_process(gui: StatusGUI):
+def run_process(gui: StatusGUI, retry_event: threading.Event):
     # ROS2 init
     rclpy.init()
     node = rclpy.create_node("brick_assemble_node", namespace=ROBOT_ID)
@@ -200,9 +200,41 @@ def run_process(gui: StatusGUI):
                     print(f'{idx}층{floor}집기'); gui.update_status_text(f'{idx}층{floor}집기')
                     movel(block_for_construction,vel=VELOCITY,acc=ACC); movel(block_to_down,vel=VELOCITY,acc=ACC,mod=DR_MV_MOD_REL); grip(); mwait(0.5)
                     while True:
-                        di=[get_digital_input(i) for i in (1,2,3)]
-                        if di==[0,1,1]: break
-                        release(); movel(dummy,vel=VELOCITY,acc=ACC); input('retry'); movel(block_for_construction,vel=VELOCITY,acc=ACC)
+                        di1 = get_digital_input(1)
+                        di2 = get_digital_input(2)
+                        di3 = get_digital_input(3)
+                        print(f'{floor+1}층 진행중')
+                        # 1. 그립 실패: [0,1,0]
+                        if [di1, di2, di3] == [1,0,0]:
+                            release()
+                            gui.update_status_text("❌ 그립 실패 — Start 버튼을 눌러 재시도")
+                            retry_event.clear()      # 이전 신호 초기화
+                            retry_event.wait()       # 버튼 클릭될 때까지 대기
+                            movel(block_for_construction, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+                            mwait(0.5)
+                            movel(block_to_down, vel=VELOCITY, acc=ACC, ref=DR_BASE, mod=DR_MV_MOD_REL)
+                            mwait(0.5)
+                            grip()
+                            continue
+
+
+                        # 2. 비정상 블록 감지: [0,0,1]
+                        elif [di1, di2, di3] == [0,0,1]:
+                            movej(dummy, vel=VELOCITY, acc=ACC)
+                            release()
+                            gui.update_status_text("⚠️ 비정상 블록 — Start 버튼을 눌러 재시도")
+                            retry_event.clear()
+                            retry_event.wait()
+                            continue
+                        # 3. 정상 블록 감지: [0,1,1]
+                        elif [di1, di2, di3] == [0,1,1]:
+                            print("✅ 정상 블록 감지 완료!")
+                            break
+                        # 4. 예외 처리: 예상치 못한 조합
+                        else:
+                            print(f"⚠️ 측정중")
+                            time.sleep(3)  # 잠시 대기 후 다시 측정
+                            continue
                     movel(block_for_construction,vel=VELOCITY,acc=ACC)
                     movel([step_1,step_2,step_3,step_4,step_5,step_6,step_7,step_8,step_9][idx],vel=VELOCITY,acc=ACC)
                     task_compliance_ctrl(stx=[500,500,500,100,100,100]); time.sleep(1)
@@ -239,7 +271,27 @@ def run_process(gui: StatusGUI):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     gui = StatusGUI()
+
+    # 1) 재시도용 Event 객체 생성
+    retry_event = threading.Event()
+
+    # 2) run_process 스레드 미리 생성(한 번만)
+    worker_thread = threading.Thread(
+        target=run_process,
+        args=(gui, retry_event),
+        daemon=True
+    )
+
+    # 3) Start 버튼 클릭 핸들러 정의
+    def on_start():
+        # 스레드를 한 번만 시작
+        if not worker_thread.is_alive():
+            worker_thread.start()
+            gui.start_btn.setText("재시도")      # 버튼 텍스트 바꾸거나
+        # 이후 누를 땐 retry_event.set()만 작동
+        retry_event.set()
+
+    gui.start_btn.clicked.connect(on_start)
+
     gui.show()
-    thread = threading.Thread(target=run_process, args=(gui,))
-    gui.start_btn.clicked.connect(thread.start)
     sys.exit(app.exec_())
