@@ -6,4 +6,5 @@
   <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache" />
 </p>
 
-# ROKEY3_automation_process_system - LoBotHouse
+# Implementation of a Robotic Automation Process System Using ROS2  
+LoBotHouse
