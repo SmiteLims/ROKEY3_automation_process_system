@@ -46,7 +46,9 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
     <img src="https://img.youtube.com/vi/LTs1zqtvSvc/0.jpg" alt="Watch the video" width="600"/>
   </a>
 </p>
+
 ---
+
 ## 📄 Documentation
 
 For a detailed explanation of this project, please refer to the following document:
@@ -54,6 +56,7 @@ For a detailed explanation of this project, please refer to the following docume
 👉 [docs/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf](docs/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf)
 
 ---
+
 ## 👥 Contributors
 
 Thanks to these wonderful people who have contributed to this project:
