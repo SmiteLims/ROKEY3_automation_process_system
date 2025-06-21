@@ -17,6 +17,6 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 ---
 
 ## 🛠️ Equipment and Materials Used
-![Robot Working Demo](image/materials.png)
+![Equipment and Materials](image/materials.png)
 - Doosan Collaborative Robot M0609  
 - ROS2 Humble + Ubuntu 22.04  
