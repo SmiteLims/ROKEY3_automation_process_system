@@ -39,3 +39,11 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 - If the gripper detects an abnormal object, the robot moves it to the disposal area.
 - Even if the robot stops due to an error or emergency, it can resume operation using system variables.
 
+## 🎥 Demo Video
+
+<p align="center">
+  <a href="https://youtu.be/LTs1zqtvSvc">
+    <img src="https://youtu.be/LTs1zqtvSvc/0.jpg" alt="Watch the video"/>
+  </a>
+</p>
+
