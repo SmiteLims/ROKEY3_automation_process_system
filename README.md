@@ -35,7 +35,7 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 ## Scenario
 1. The robot transports construction materials for foundation work and carries out concrete pouring.
 <video width="600" controls>
-  <source src="media/foundation.mp4" type="video/mp4">
+  <source src="image/foundation.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 2. The M0609 interprets the blueprint by measuring the height of steel bars embedded in the plate, saving information about the building type and its position.
