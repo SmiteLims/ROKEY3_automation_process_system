@@ -22,11 +22,19 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 - ROS2 Humble + Ubuntu 22.04
 
 ---
+## Assumptions for Scenario
+![Assumptions for Scenario](image/assumptions.png)
+1. There are multiple robots in real-world scenarios; however, only the M0609 is considered in this project.
+2. Due to constraints, the steel bar plate is used to represent the blueprint.
+3. Warehouses are built in sourcing areas, and all materials are classified by workers; therefore, misclassifications may occur.
+4. There are three types of buildings.
+5. The disposal area and truck mixer are represented by cups.
+6. The building site is assumed to be a LEGO base.
+---
 
 ## Scenario
-1. The M0609 robot reads a blueprint for the building to be constructed.
-2. It interprets the blueprint by measuring the height of steel bars embedded in the plate, saving information about the building type and its position.
-3. The robot transports construction materials for foundation work and carries out concrete pouring.
-4. Based on the interpreted data, the robot stacks LEGO-like blocks to build the structure.
+1. The M0609 interprets the blueprint by measuring the height of steel bars embedded in the plate, saving information about the building type and its position.
+2. The robot transports construction materials for foundation work and carries out concrete pouring.
+3. Based on the interpreted data, the robot stacks LEGO-like blocks to build the structure.
 - If the gripper detects an abnormal object, the robot moves it to the disposal area.
 - Even if the robot stops due to an error or emergency, it can resume operation using system variables.
