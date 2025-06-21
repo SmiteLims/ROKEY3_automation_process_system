@@ -43,7 +43,8 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 
 <p align="center">
   <a href="https://youtu.be/LTs1zqtvSvc">
-    <img src="https://youtu.be/LTs1zqtvSvc/0.jpg" alt="Watch the video"/>
+    <img src="https://img.youtube.com/vi/LTs1zqtvSvc/0.jpg" alt="Watch the video" width="600"/>
   </a>
 </p>
+
 
