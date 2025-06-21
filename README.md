@@ -53,7 +53,7 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 
 For a detailed explanation of this project, please refer to the following document:
 
-👉 [docs/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf](docs/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf)
+👉 [doc/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf](doc/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf)
 
 ---
 
