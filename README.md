@@ -22,7 +22,7 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 - ROS2 Humble + Ubuntu 22.04
 
 ---
-## Assumptions for Scenario
+## 🧠 Assumptions for Scenario
 ![Assumptions for Scenario](image/assumptions.png)
 1. There are multiple robots in real-world scenarios; however, only the M0609 is considered in this project.
 2. Due to constraints, the steel bar plate is used to represent the blueprint.
@@ -32,13 +32,13 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
 6. The building site is assumed to be a LEGO base.
 ---
 
-## Scenario
+## 📖 Scenario
 1. The M0609 transports construction materials for foundation work and carries out concrete pouring.
 2. The robot interprets the blueprint by measuring the height of steel bars embedded in the plate, saving information about the building type and its position.
 3. Based on the interpreted data, the robot stacks LEGO blocks to build the structure.
 - If the gripper detects an abnormal object, the robot moves it to the disposal area.
 - Even if the robot stops due to an error or emergency, it can resume operation using system variables.
-
+---
 ## 🎥 Demo Video
 
 <p align="center">
@@ -46,5 +46,47 @@ This project utilizes the Doosan collaborative robot M0609 to symbolically imple
     <img src="https://img.youtube.com/vi/LTs1zqtvSvc/0.jpg" alt="Watch the video" width="600"/>
   </a>
 </p>
+---
+## 📄 Documentation
 
+For a detailed explanation of this project, please refer to the following document:
+
+👉 [docs/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf](docs/F-2_협동1_김도엽_이재호_이한용_손지훈.pdf)
+
+---
+## 👥 Contributors
+
+Thanks to these wonderful people who have contributed to this project:
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/kimdoyub">
+        <img src="https://github.com/kimdoyub.png" width="100px;" alt="kimdoyub"/><br />
+        <sub><b>kimdoyub</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/SmiteLims">
+        <img src="https://github.com/SmiteLims.png" width="100px;" alt="SmiteLims"/><br />
+        <sub><b>SmiteLims</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/machyong">
+        <img src="https://github.com/machyong.png" width="100px;" alt="machyong"/><br />
+        <sub><b>machyong</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/jihoonindices">
+        <img src="https://github.com/jihoonindices" width="100px;" alt="jihoonindices"/><br />
+        <sub><b>jihoonindices</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
+
+---
 
